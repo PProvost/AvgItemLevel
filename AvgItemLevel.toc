@@ -1,0 +1,18 @@
+## Interface: 30100
+
+## Title: AvgItemLevel
+## Notes: Template for creating new addons
+## Author: Quaiche
+## Version: 1.0
+## X-Category: Misc
+
+## OptionalDeps: tekDebug, tekErr
+
+## LoadManagers: AddonLoader
+## X-LoadOn-Always: delayed
+## X-LoadOn-Slash: /avgitemlevel
+
+LibStub.lua
+tekKonfigAboutPanel.lua
+
+AvgItemLevel.lua

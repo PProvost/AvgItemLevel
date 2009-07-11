@@ -1,0 +1,4 @@
+h1. Overview
+
+AvgItemLevel is a simple plug-n-play addon that simply shows the average ItemLevel (iLevel) of your currently equipped gear on the bottom right of the Character Pane. No configuration required, just install and go.
+
