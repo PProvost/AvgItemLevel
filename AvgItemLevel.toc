@@ -5,14 +5,8 @@
 ## Author: Quaiche
 ## Version: 1.0
 ## X-Category: Misc
-
-## OptionalDeps: tekDebug, tekErr
-
-## LoadManagers: AddonLoader
-## X-LoadOn-Always: delayed
-## X-LoadOn-Slash: /avgitemlevel
+## X-License: Apache 2.0
 
 LibStub.lua
 tekKonfigAboutPanel.lua
-
 AvgItemLevel.lua
