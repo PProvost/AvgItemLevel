@@ -1,7 +1,7 @@
 ## Interface: 30100
 
 ## Title: AvgItemLevel
-## Notes: Template for creating new addons
+## Notes: Displays your the average item level on the character pane.
 ## Author: Quaiche
 ## Version: 1.0
 ## X-Category: Misc

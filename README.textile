@@ -1,4 +1,16 @@
-h1. Overview
+h2. Overview
 
 AvgItemLevel is a simple plug-n-play addon that simply shows the average ItemLevel (iLevel) of your currently equipped gear on the bottom right of the Character Pane. No configuration required, just install and go.
 
+h2. How the value is calculated
+
+# 25-man scaling is same as in 10-man.
+# Shirt, tabard, offhand, and ranged/relic slots do not affect vehicle scaling
+# This does mean an ilvl 226 1 hand weapon is better than an ilvl 213 2 hander
+# Enchants and gems do not affect it either, it is based solely off item level
+# An ilvl 200 blue is equivalent to an ilvl 187 epic. Experimenting with other combos of blue/epic gear gave me reasonable confidence that a blue item is equivalent to an epic 13 levels lower
+# An empty slot is equivalent to an ilvl 0 epic. This does mean equipping an ilvl 0 blue such as Insignia of the Scourge will be worse than having nothing at all in the slot
+# Empirically, taking the average ilvl of your gear (subtract 13 for each blue, 26 for each green) and dividing by 15 (total number of applicable slots), then subtracting 170 will give you the percent increase of the health points of your vehicle compared to base - it cannot be decreased though (naked is a 0% increase)
+# Thus: All ilvl 200 epic gear => 200-170 => 30% increase in vehicle hp. All 226 would be a 56% increase,
+
+Source: http://mmo-worlds.blogspot.com/2009/03/world-of-warcraft-how-flame-leviathan.html
