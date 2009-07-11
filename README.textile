@@ -1,14 +1,12 @@
 h2. Overview
 
-AvgItemLevel is a simple plug-n-play addon that simply shows the average ItemLevel (iLevel) of your 
-currently equipped gear on the bottom right of the Character and Inspect frames.
+AvgItemLevel is a simple plug-n-play addon that simply shows the average ItemLevel (iLevel) of your currently equipped gear on the bottom right of the Character and Inspect frames.
 
 No configuration required, just install and go.
 
 h2. How the value is calculated
 
-The value is calculated using the current (patch 3.1) scaling for iLevel on vehicles like those used in
-Flame Leviathan and Wintergrasp. This calculation could change in the future.
+The value is calculated using the current (patch 3.1) scaling for iLevel on vehicles like those used in Flame Leviathan and Wintergrasp. This calculation could change in the future.
 
 # 25-man scaling is same as in 10-man.
 # Shirt, tabard, offhand, and ranged/relic slots do not affect vehicle scaling
