@@ -13,4 +13,9 @@ h2. How the value is calculated
 # Empirically, taking the average ilvl of your gear (subtract 13 for each blue, 26 for each green) and dividing by 15 (total number of applicable slots), then subtracting 170 will give you the percent increase of the health points of your vehicle compared to base - it cannot be decreased though (naked is a 0% increase)
 # Thus: All ilvl 200 epic gear => 200-170 => 30% increase in vehicle hp. All 226 would be a 56% increase,
 
-Source: http://mmo-worlds.blogspot.com/2009/03/world-of-warcraft-how-flame-leviathan.html
+_Source: http://mmo-worlds.blogspot.com/2009/03/world-of-warcraft-how-flame-leviathan.html_
+
+Additionally the following assumptions are made:
+# Artifact/heirloom (yellow) and legendary (orange) are the same as Epic (purple)
+# Common (white) and Poor (gray) are 0
+

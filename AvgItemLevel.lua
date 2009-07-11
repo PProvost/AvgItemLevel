@@ -19,40 +19,57 @@ local slots = { "BackSlot", "ChestSlot", "FeetSlot", "Finger0Slot", "Finger1Slot
 local f = CreateFrame("frame")
 f:SetScript("OnEvent", function(self, event, ...) if self[event] then return self[event](self, event, ...) end end)
 f:RegisterEvent("ADDON_LOADED")
+f:RegisterEvent("UNIT_INVENTORY_CHANGED")
+f:RegisterEvent("UNIT_TARGET")
 
+local selfLoaded, inspectLoaded
 function f:ADDON_LOADED(event, addon)
-	if addon:lower() ~= "avgitemlevel" then return end
-	LibStub("tekKonfig-AboutPanel").new(nil, "AvgItemLevel")
-	self:UnregisterEvent("ADDON_LOADED"); self.ADDON_LOADED = nil
-	if IsLoggedIn() then self:PLAYER_LOGIN() else self:RegisterEvent("PLAYER_LOGIN") end
+	if addon:lower() == "avgitemlevel" then 
+		LibStub("tekKonfig-AboutPanel").new(nil, "AvgItemLevel")
+		if IsLoggedIn() then self:PLAYER_LOGIN() else self:RegisterEvent("PLAYER_LOGIN") end
+		selfLoaded = true
+	elseif addon:lower() == "blizzard_inspectui" then
+		self.inspString = InspectPaperDollFrame:CreateFontString("AvgItemLevelInspString", "OVERLAY", "GameFontNormalSmall")
+		self.inspString:SetPoint("BOTTOMRIGHT", InspectPaperDollFrame, "BOTTOMRIGHT", -50, 85)
+		self.inspString:SetJustifyH("RIGHT")
+		InspectPaperDollFrame:HookScript("OnShow", function(self) f:Calculate("target") end)
+		inspectLoaded = true
+	end
+	if selfLoaded and inspectLoaded then self:UnregisterEvent("ADDON_LOADED"); self.ADDON_LOADED = nil end
 end
 
 function f:PLAYER_LOGIN()
-	self.fontString = PaperDollFrame:CreateFontString("AvgItemLevelString", "ARTWORK", "GameFontNormalSmall")
-	self.fontString:SetPoint("BOTTOMRIGHT", PaperDollFrame, "BOTTOMRIGHT", -50, 86)
-	PaperDollFrame:HookScript("OnShow", function(self) f:Calculate() end)
+	self.ppdString = PaperDollFrame:CreateFontString("AvgItemLevelPpdString", "OVERLAY", "GameFontNormalSmall")
+	self.ppdString:SetPoint("BOTTOMRIGHT", PaperDollFrame, "BOTTOMRIGHT", -50, 85)
+	self.ppdString:SetJustifyH("RIGHT")
+	PaperDollFrame:HookScript("OnShow", function(self) f:Calculate("player") end)
 	self:UnregisterEvent("PLAYER_LOGIN"); self.PLAYER_LOGIN = nil
 end
 
-function f:Calculate()
+function f:UNIT_INVENTORY_CHANGED(event, unit)
+	if (unit == "player") or (unit == "target") then self:Calculate(unit) end
+end
+
+function f:UNIT_TARGET(event, unit)
+	if unit ~= "player" then return end
+	if InspectFrame and InspectFrame:IsVisible() then self:Calculate("target") end
+end
+
+function f:Calculate(unit)
 	local total = 0
 	local slot, link, quality, _, iLevel
 	for i = 1,#slots do
 		iLevel = 0
 		slot = GetInventorySlotInfo(slots[i])
-		link = GetInventoryItemLink("player", slot)
+		link = GetInventoryItemLink(unit, slot)
 		if link then
 			_, _, quality, iLevel = GetItemInfo(link)
-
-			-- Assumptions: 
-			--    Artifact/heirloom (yellow) and legendary (orange) are the same as Epic (purple)
-			--    Common (white) and Poor (gray) are 0
-			if quality = 4 then iLevel = iLevel - 13 end
-			if quality = 3 then iLevel = iLevel - 26 end
-			if quality < 3 then iLevel = 0 end
+			if quality == 3 then iLevel = iLevel - 13
+			elseif quality == 2 then iLevel = iLevel - 26
+			elseif quality < 2 then iLevel = 0 end
 		end
-		total = total + (iLevel or 0)
+		total = total + iLevel
 	end
-
-	self.fontString:SetText( string.format("%.2f", total/#slots) )
+	local fs = (unit == "target") and self.inspString or self.ppdString
+	fs:SetText( string.format("Avg Item Level\n%.2f", total/#slots) )
 end
