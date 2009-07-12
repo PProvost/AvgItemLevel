@@ -71,5 +71,5 @@ function f:Calculate(unit)
 		total = total + iLevel
 	end
 	local fs = (unit == "target") and self.inspString or self.ppdString
-	fs:SetText( string.format("Avg Item Level\n%.2f", total/#slots) )
+	fs:SetText( string.format("Avg iLevel\n%.2f", total/#slots) )
 end
