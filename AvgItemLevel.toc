@@ -3,7 +3,7 @@
 ## Title: AvgItemLevel
 ## Notes: Displays your weighted average item level on the character pane.
 ## Author: Quaiche
-## Version: 1.0
+## Version: @project-version@
 ## X-Category: Misc
 ## X-License: Apache 2.0
 
