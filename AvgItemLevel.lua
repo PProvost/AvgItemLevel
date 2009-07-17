@@ -40,7 +40,7 @@ end
 
 function f:PLAYER_LOGIN()
 	self.ppdString = PaperDollFrame:CreateFontString("AvgItemLevelPpdString", "OVERLAY", "GameFontNormalSmall")
-	self.ppdString:SetPoint("BOTTOMRIGHT", PaperDollFrame, "BOTTOMRIGHT", -50, 85)
+	self.ppdString:SetPoint("BOTTOMRIGHT", PaperDollFrame, "BOTTOMRIGHT", -45, 85)
 	self.ppdString:SetJustifyH("RIGHT")
 	PaperDollFrame:HookScript("OnShow", function(self) f:Calculate("player") end)
 	self:UnregisterEvent("PLAYER_LOGIN"); self.PLAYER_LOGIN = nil
@@ -71,5 +71,5 @@ function f:Calculate(unit)
 		total = total + iLevel
 	end
 	local fs = (unit == "target") and self.inspString or self.ppdString
-	fs:SetText( string.format("Avg iLevel\n%.2f", total/#slots) )
+	fs:SetText( string.format("Avg iLvl\n%.2f", total/#slots) )
 end
