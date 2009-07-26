@@ -16,14 +16,14 @@ limitations under the License.
 
 local slots = { "BackSlot", "ChestSlot", "FeetSlot", "Finger0Slot", "Finger1Slot", "HandsSlot", "HeadSlot", "LegsSlot", "MainHandSlot", "NeckSlot", "ShoulderSlot", "Trinket0Slot", "Trinket1Slot", "WaistSlot", "WristSlot" }
 
-local f = CreateFrame("frame")
-f:SetScript("OnEvent", function(self, event, ...) if self[event] then return self[event](self, event, ...) end end)
-f:RegisterEvent("ADDON_LOADED")
-f:RegisterEvent("UNIT_INVENTORY_CHANGED")
-f:RegisterEvent("UNIT_TARGET")
+AvgItemLevel = CreateFrame("frame")
+AvgItemLevel:SetScript("OnEvent", function(self, event, ...) if self[event] then return self[event](self, event, ...) end end)
+AvgItemLevel:RegisterEvent("ADDON_LOADED")
+AvgItemLevel:RegisterEvent("UNIT_INVENTORY_CHANGED")
+AvgItemLevel:RegisterEvent("UNIT_TARGET")
 
 local selfLoaded, inspectLoaded
-function f:ADDON_LOADED(event, addon)
+function AvgItemLevel:ADDON_LOADED(event, addon)
 	if addon:lower() == "avgitemlevel" then 
 		LibStub("tekKonfig-AboutPanel").new(nil, "AvgItemLevel")
 		if IsLoggedIn() then self:PLAYER_LOGIN() else self:RegisterEvent("PLAYER_LOGIN") end
@@ -32,30 +32,30 @@ function f:ADDON_LOADED(event, addon)
 		self.inspString = InspectPaperDollFrame:CreateFontString("AvgItemLevelInspString", "OVERLAY", "GameFontNormalSmall")
 		self.inspString:SetPoint("BOTTOMRIGHT", InspectPaperDollFrame, "BOTTOMRIGHT", -50, 85)
 		self.inspString:SetJustifyH("RIGHT")
-		InspectPaperDollFrame:HookScript("OnShow", function(self) f:Calculate("target") end)
+		InspectPaperDollFrame:HookScript("OnShow", function(self) AvgItemLevel:CalculateAndShow("target") end)
 		inspectLoaded = true
 	end
 	if selfLoaded and inspectLoaded then self:UnregisterEvent("ADDON_LOADED"); self.ADDON_LOADED = nil end
 end
 
-function f:PLAYER_LOGIN()
+function AvgItemLevel:PLAYER_LOGIN()
 	self.ppdString = PaperDollFrame:CreateFontString("AvgItemLevelPpdString", "OVERLAY", "GameFontNormalSmall")
 	self.ppdString:SetPoint("BOTTOMRIGHT", PaperDollFrame, "BOTTOMRIGHT", -45, 85)
 	self.ppdString:SetJustifyH("RIGHT")
-	PaperDollFrame:HookScript("OnShow", function(self) f:Calculate("player") end)
+	PaperDollFrame:HookScript("OnShow", function(self) AvgItemLevel:CalculateAndShow("player") end)
 	self:UnregisterEvent("PLAYER_LOGIN"); self.PLAYER_LOGIN = nil
 end
 
-function f:UNIT_INVENTORY_CHANGED(event, unit)
-	if (unit == "player") or (unit == "target") then self:Calculate(unit) end
+function AvgItemLevel:UNIT_INVENTORY_CHANGED(event, unit)
+	if (unit == "player") or (unit == "target") then self:CalculateAndShow(unit) end
 end
 
-function f:UNIT_TARGET(event, unit)
+function AvgItemLevel:UNIT_TARGET(event, unit)
 	if unit ~= "player" then return end
-	if InspectFrame and InspectFrame:IsVisible() then self:Calculate("target") end
+	if InspectFrame and InspectFrame:IsVisible() then self:CalculateAndShow("target") end
 end
 
-function f:Calculate(unit)
+function AvgItemLevel:CalculateAverage(unit)
 	local total = 0
 	local slot, link, quality, _, iLevel
 	for i = 1,#slots do
@@ -70,6 +70,11 @@ function f:Calculate(unit)
 		end
 		total = total + iLevel
 	end
+	return total/#slots
+end
+
+function AvgItemLevel:CalculateAndShow(unit)
+	local avg = self:CalculateAverage(unit)
 	local fs = (unit == "target") and self.inspString or self.ppdString
-	fs:SetText( string.format("Avg iLvl\n%.2f", total/#slots) )
+	fs:SetText( string.format("Avg iLvl\n%.2f", avg) )
 end

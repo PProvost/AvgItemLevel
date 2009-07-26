@@ -8,5 +8,13 @@
 ## X-License: Apache 2.0
 
 LibStub.lua
+CallbackHandler-1.0.lua
+LibDataBroker-1.1.lua
+
+tekPanel.lua
 tekKonfigAboutPanel.lua
+tekKonfigScroll.lua
+tekKonfigButton.lua
+
 AvgItemLevel.lua
+AvgItemLevelGroup.lua
