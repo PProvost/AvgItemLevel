@@ -27,6 +27,6 @@ h2. Impact of Averge ItemLevel on Vehicle Health
 # Thus: All ilvl 200 epic gear => 200-170 => 30% increase in vehicle hp. All 226 would be a 56% increase,
 
 h2. References
-# http://mmo-worlds.blogspot.com/2009/03/world-of-warcraft-how-flame-leviathan.html
 
+# http://mmo-worlds.blogspot.com/2009/03/world-of-warcraft-how-flame-leviathan.html
 
