@@ -45,6 +45,31 @@ for i=1,NUMROWS do
 	lastbutt = butt
 end
 
+-- Source: http://www.wowwiki.com/ColorGradient
+local function ColorGradient(perc, ...)
+	if perc >= 1 then
+		local r, g, b = select(select('#', ...) - 2, ...)
+		return r, g, b
+	elseif perc <= 0 then
+		local r, g, b = ...
+		return r, g, b
+	end
+	
+	local num = select('#', ...) / 3
+	local segment, relperc = math.modf(perc*(num-1))
+	local r1, g1, b1, r2, g2, b2 = select((segment*3)+1, ...)
+
+	return r1 + (r2-r1)*relperc, g1 + (g2-g1)*relperc, b1 + (b2-b1)*relperc
+end
+
+local function ColorGradientEscape(perc, c1r, c1g, c1b, c2r, c2g, c2b, c3r, c3g, c3b)
+   local r, g, b = ColorGradient(perc, c1r, c1g, c1b, c2r, c2g, c2b, c3r, c3g, c3b)   
+   r = r <= 1 and r >= 0 and r or 0
+   g = g <= 1 and g >= 0 and g or 0
+   b = b <= 1 and b >= 0 and b or 0
+   return string.format("|cFF%02x%02x%02x", r*255, g*255, b*255)
+end
+
 local function GetGroupAverages()
 	local averages = {}
 	local unitbase
@@ -80,19 +105,19 @@ local function Update()
 
 	local avgstring
 	local i = 0
+	local min, max = 239, 0   -- 239 is the highest iLevel in the game pre patch 3.2
+	for _,avg in pairs(averages) do
+		if avg < min then min = avg end
+		if avg > max then max = avg end
+	end
 	for name, avg in pairs(averages) do
 			i = i + 1
 			local row = rows[i-offset]
+			local perc = (avg-min)/(max-min)
 			if (i-offset) > 0 and (i-offset) <= NUMROWS then
 				row.name:SetText(name)
 				if tonumber(avg) then
-					if avg >= 220 then
-						avgstring = "|cFF00FF00" .. string.format("%.2f", avg) .. "|r"
-					elseif avg >= 210 then
-						avgstring = "|cFFFFFF00" .. string.format("%.2f", avg) .. "|r"
-					else
-						avgstring = "|cFFFF0000" .. string.format("%.2f", avg) .. "|r"
-					end
+					avgstring = ColorGradientEscape(perc, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0) .. string.format("%.2f",avg) .. "|r"
 				else
 					avgstring = "|cFFFFFFFF" .. avg .. "|r"
 				end
