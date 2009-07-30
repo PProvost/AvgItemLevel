@@ -2,7 +2,7 @@ h2. Overview
 
 AvgItemLevel is a World of Warcraft addon that shows the average ItemLevel (iLevel) of your currently equipped gear on the bottom right of the Character and Inspect frames.
 
-Additionally, you can display a report of your party or raid's average iLevel using the /avgilevel command.
+Additionally, you can display a report of your party or raid's average iLevel using the /avgilevel command or by clicking the included LDB launcher.
 
 No configuration required, just install and go.
 
