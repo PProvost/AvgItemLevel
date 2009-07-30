@@ -107,28 +107,28 @@ local function Update()
 	local i = 0
 	local min, max = 239, 0   -- 239 is the highest iLevel in the game pre patch 3.2
 	for _,avg in pairs(averages) do
-		if avg < min then min = avg end
-		if avg > max then max = avg end
+		if tonumber(avg) and (avg < min) then min = avg end
+		if tonumber(avg) and (avg > max) then max = avg end
 	end
 	for name, avg in pairs(averages) do
-			i = i + 1
-			local row = rows[i-offset]
-			local perc = (avg-min)/(max-min)
-			if (i-offset) > 0 and (i-offset) <= NUMROWS then
-				row.name:SetText(name)
-				if tonumber(avg) then
-					avgstring = ColorGradientEscape(perc, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0) .. string.format("%.2f",avg) .. "|r"
-				else
-					avgstring = "|cFFFFFFFF" .. avg .. "|r"
-				end
-				row.avg:SetText(avgstring)
-				row:Show()
-			end
+		i = i + 1
+		local row = rows[i-offset]
+		if tonumber(avg) then
+			local perc = 1
+			if max > min then perc = (avg-min)/(max-min) end
+			avgstring = ColorGradientEscape(perc, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0) .. string.format("%.2f",avg) .. "|r"
+		else
+			avgstring = "|cFFFFFFFF" .. avg .. "|r"
+		end
+		if (i-offset) > 0 and (i-offset) <= NUMROWS then
+			row.name:SetText(name)
+			row.avg :SetText(avgstring)
+			row:Show()
+		end
 	end
 	if (i-offset) < NUMROWS then
 		for j=(i-offset+1),NUMROWS do rows[j]:Hide() end
 	end
-
 end
 
 local orig = scroll:GetScript("OnValueChanged")
