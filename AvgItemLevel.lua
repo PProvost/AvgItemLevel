@@ -64,7 +64,8 @@ function AvgItemLevel:CalculateAverage(unit)
 		link = GetInventoryItemLink(unit, slot)
 		if link then
 			_, _, quality, iLevel = GetItemInfo(link)
-			if quality == 3 then iLevel = iLevel - 13
+			if not quality then iLevel = 0
+			elseif quality == 3 then iLevel = iLevel - 13
 			elseif quality == 2 then iLevel = iLevel - 26
 			elseif quality < 2 then iLevel = 0 end
 		end
