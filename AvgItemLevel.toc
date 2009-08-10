@@ -1,4 +1,4 @@
-## Interface: 30100
+## Interface: 30200
 
 ## Title: AvgItemLevel
 ## Notes: Displays your weighted average item level on the character pane.
