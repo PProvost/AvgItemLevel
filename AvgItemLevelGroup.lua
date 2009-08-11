@@ -131,6 +131,20 @@ local function Update()
 	end
 end
 
+local function Report()
+	local chatType = GetNumRaidMembers() > 0 and "RAID" or "PARTY"
+	local msg
+
+	local averages = GetGroupAverages()
+	SendChatMessage("AvgItemLevel Report", chatType)
+	SendChatMessage("-------------------------------", chatType)
+	for name, avg in pairs(averages) do
+		if tonumber(avg) then avg = string.format("%.2f",avg) end
+		msg = string.format("%s %s", name, avg)
+		SendChatMessage(msg, chatType)
+	end
+end
+
 local orig = scroll:GetScript("OnValueChanged")
 scroll:SetScript("OnValueChanged", function(self, offset, ...)
 	offset = math.floor(offset)
@@ -143,6 +157,13 @@ refreshButton:SetWidth(65)
 refreshButton:SetHeight(22)
 refreshButton:SetText("Refresh")
 refreshButton:SetScript("OnClick", Update)
+
+local reportButton = LibStub("tekKonfig-Button").new(panel, "RIGHT", refreshButton, "LEFT", -5, 0)
+reportButton:SetWidth(65) 
+reportButton:SetHeight(22)
+reportButton:SetText("Report")
+reportButton:SetScript("OnClick", Report)
+
 
 scroll:SetValue(0)
 panel:SetScript("OnShow", Update)
