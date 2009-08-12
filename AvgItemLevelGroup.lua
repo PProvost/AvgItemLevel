@@ -80,7 +80,7 @@ local function GetGroupAverages()
 	else
 		unitbase = "party"
 		groupsize = GetNumPartyMembers()
-		averages[UnitName("player")] = AvgItemLevel:CalculateAverage("player")
+		table.insert(averages, { name=UnitName("player"), average=AvgItemLevel:CalculateAverage("player") })
 	end
 
 	for i = 1, groupsize do
@@ -89,12 +89,19 @@ local function GetGroupAverages()
 		if CanInspect(unit) then
 			NotifyInspect(unit)
 			local avg = AvgItemLevel:CalculateAverage(unit)
-			averages[name] = avg 
+			table.insert(averages, {name=name, average=avg})
 			ClearInspectPlayer()
 		else
-			averages[name] = "Out of range"
+			table.insert(averages, {name=name, average="Out of range"})
 		end
 	end
+
+	table.sort(averages, function(x,y) 
+		if not tonumber(x.average) then return false end
+		if not tonumber(y.average) then return true end
+		return (x.average > y.average)
+	end)
+
 	return averages
 end
 
@@ -105,12 +112,15 @@ local function Update()
 
 	local avgstring
 	local i = 0
-	local min, max = 239, 0   -- 239 is the highest iLevel in the game pre patch 3.2
-	for _,avg in pairs(averages) do
+	local min, max = 500, 0   -- 239 is the highest iLevel in the game pre patch 3.2
+	local avg
+	for index,average in ipairs(averages) do
+		avg = average.average
 		if tonumber(avg) and (avg < min) then min = avg end
 		if tonumber(avg) and (avg > max) then max = avg end
 	end
-	for name, avg in pairs(averages) do
+	for index,average in ipairs(averages) do
+		avg = average.average
 		i = i + 1
 		local row = rows[i-offset]
 		if tonumber(avg) then
@@ -121,7 +131,7 @@ local function Update()
 			avgstring = "|cFFFFFFFF" .. avg .. "|r"
 		end
 		if (i-offset) > 0 and (i-offset) <= NUMROWS then
-			row.name:SetText(name)
+			row.name:SetText(average.name)
 			row.avg :SetText(avgstring)
 			row:Show()
 		end
