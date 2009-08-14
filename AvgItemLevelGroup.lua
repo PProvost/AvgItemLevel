@@ -71,7 +71,7 @@ local function ColorGradientEscape(perc, c1r, c1g, c1b, c2r, c2g, c2b, c3r, c3g,
 end
 
 local function GetGroupAverages()
-	local averages = {}
+	local result = {}
 	local unitbase
 	local groupsize = 0
 	if UnitInRaid("player") then
@@ -80,7 +80,7 @@ local function GetGroupAverages()
 	else
 		unitbase = "party"
 		groupsize = GetNumPartyMembers()
-		table.insert(averages, { name=UnitName("player"), average=AvgItemLevel:CalculateAverage("player") })
+		table.insert(result, { name=UnitName("player"), average=AvgItemLevel:CalculateAverage("player") })
 	end
 
 	for i = 1, groupsize do
@@ -89,40 +89,35 @@ local function GetGroupAverages()
 		if CanInspect(unit) then
 			NotifyInspect(unit)
 			local avg = AvgItemLevel:CalculateAverage(unit)
-			table.insert(averages, {name=name, average=avg})
+			table.insert(result, {name=name, average=avg})
 			ClearInspectPlayer()
 		else
-			table.insert(averages, {name=name, average="Out of range"})
+			table.insert(result, {name=name, average="Out of range"})
 		end
 	end
 
-	table.sort(averages, function(x,y) 
+	table.sort(result, function(x,y) 
 		if not tonumber(x.average) then return false end
 		if not tonumber(y.average) then return true end
 		return (x.average > y.average)
 	end)
 
-	return averages
+	return result
 end
 
 local offset = 0
-local function Update()
-	local averages = GetGroupAverages()
-	scroll:SetMinMaxValues(0, math.max(0, #averages))
+local averages
+local min, max
+local avg
 
+local function Update()
 	local avgstring
 	local i = 0
-	local min, max = 500, 0   -- 239 is the highest iLevel in the game pre patch 3.2
-	local avg
-	for index,average in ipairs(averages) do
-		avg = average.average
-		if tonumber(avg) and (avg < min) then min = avg end
-		if tonumber(avg) and (avg > max) then max = avg end
-	end
+
 	for index,average in ipairs(averages) do
 		avg = average.average
 		i = i + 1
-		local row = rows[i-offset]
+		local row = rows[i+offset]
 		if tonumber(avg) then
 			local perc = 1
 			if max > min then perc = (avg-min)/(max-min) end
@@ -148,11 +143,26 @@ local function Report()
 	local averages = GetGroupAverages()
 	SendChatMessage("AvgItemLevel Report", chatType)
 	SendChatMessage("-------------------------------", chatType)
-	for name, avg in pairs(averages) do
+	for index, average in ipairs(averages) do
+		local name, avg = average.name, average.average
 		if tonumber(avg) then avg = string.format("%.2f",avg) end
 		msg = string.format("%s %s", name, avg)
 		SendChatMessage(msg, chatType)
 	end
+end
+
+local function Show()
+	averages = GetGroupAverages()
+	scroll:SetMinMaxValues(0, math.max(0, #averages))
+
+	min, max = 500, 0   -- 239 is the highest iLevel in the game pre patch 3.2
+	for index,average in ipairs(averages) do
+		avg = average.average
+		if tonumber(avg) and (avg < min) then min = avg end
+		if tonumber(avg) and (avg > max) then max = avg end
+	end
+
+	Update()
 end
 
 local orig = scroll:GetScript("OnValueChanged")
@@ -166,7 +176,7 @@ local refreshButton = LibStub("tekKonfig-Button").new(panel, "TOPRIGHT", -45, -4
 refreshButton:SetWidth(65) 
 refreshButton:SetHeight(22)
 refreshButton:SetText("Refresh")
-refreshButton:SetScript("OnClick", Update)
+refreshButton:SetScript("OnClick", Show)
 
 local reportButton = LibStub("tekKonfig-Button").new(panel, "RIGHT", refreshButton, "LEFT", -5, 0)
 reportButton:SetWidth(65) 
@@ -176,7 +186,7 @@ reportButton:SetScript("OnClick", Report)
 
 
 scroll:SetValue(0)
-panel:SetScript("OnShow", Update)
+panel:SetScript("OnShow", Show)
 
 SLASH_AVGITEMLEVEL1 = "/avgilevel"
 SLASH_AVGITEMLEVEL2 = "/avgitemlevel"
