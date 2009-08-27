@@ -167,67 +167,72 @@ local function Show()
 	Update()
 end
 
-local equipSlots = {
-	["HEADSLOT"] = { "INVTYPE_HEAD" },
-	["NECKSLOT"] = { "INVTYPE_NECK" },
-	["SHOULDERSLOT"] = { "INVTYPE_SHOULDER" },
-	["BACKSLOT"] = { "INVTYPE_CLOAK" },
-	["CHESTSLOT"] = { "INVTYPE_ROBE", "INVTYPE_CHEST" },
-	["WRISTSLOT"] = { "INVTYPE_WRIST" },
-	["WAISTSLOT"] = { "INVTYPE_WAIST" },
-	["LEGSSLOT"] = { "INVTYPE_LEGS" },
-	["FEETSLOT"] = { "INVTYPE_FEET" },
-	["FINGER0SLOT"] = { "INVTYPE_FINGER" },
-	["FINGER1SLOT"] = { "INVTYPE_FINGER" },
-	["TRINKET0SLOT"] = { "INVTYPE_TRINKET" },
-	["TRINKET1SLOT"] = { "INVTYPE_TRINKET" },
-	["MAINHANDSLOT"] = { "INVTYPE_2HWEAPON", "INVTYPE_WEAPON", "INVTYPE_WEAPONMAINHAND" },
+local equipSlots = { "HEADSLOT", "NECKSLOT", "SHOULDERSLOT", "BACKSLOT", "CHESTSLOT", "WRISTSLOT", "WAISTSLOT", 
+	"LEGSSLOT", "FEETSLOT", "FINGER0SLOT", "FINGER1SLOT", "TRINKET0SLOT", "TRINKET1SLOT", "MAINHANDSLOT", }
+
+-- Source: http://wowprogramming.com/docs/api_types#itemLocation
+local ITEM_INVENTORY_BACKPACK = 0x00200000
+local ITEM_INVENTORY_BAGS = 0x00400000
+local MASK_BAG = 0xf00
+local MASK_SLOT = 0x3f
+local bagMap = {
+    [0x100] = 1,
+    [0x200] = 2,
+    [0x400] = 3,
+    [0x800] = 4,
 }
+
+local function ItemInBag(itemLocation)
+    if bit.band(itemLocation, ITEM_INVENTORY_BAGS) > 0 then
+        local bag = bagMap[bit.band(itemLocation, MASK_BAG)]
+        local slot = bit.band(itemLocation, MASK_SLOT)
+        return bag, slot
+    elseif bit.band(itemLocation, ITEM_INVENTORY_BACKPACK) > 0 then
+        local slot = bit.band(itemLocation, MASK_SLOT)
+        return 0, slot
+    end
+end
 
 local function Equip()
 	local slotname
-	local maxiLevel
-	local maxiLevelItem 
-	local found
-	local itemlink
-	local invTypes
-	local name, link, quality, iLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice 
+	local maxiLevel, maxiLevelItem, maxiLevelLoc
+	local link, iLevel
+	local used = {}
+	local slot
 
-	for slotname, _ in pairs(equipSlots) do
+	for i,slotname in ipairs(equipSlots) do
 		maxiLevel = 0
 		maxiLevelItem = ""
 
-		itemlink = GetInventoryItemLink("player", GetInventorySlotInfo(slotname))
-		name, link, quality, iLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice = GetItemInfo(itemlink)
-		if iLevel > maxiLevel then 
-			maxiLevel = iLevel
-			maxiLevelItem = itemlink
-		end
+		slot = GetInventorySlotInfo(slotname)
 
-		invTypes = equipSlots[slotname]
+		-- todo adjusted ilevel (taking quality into account)
 
-		for bag = 0,NUM_BAG_SLOTS do
-			for slot = 1,GetContainerNumSlots(bag) do
-				itemlink = GetContainerItemLink(bag, slot)
-				if itemlink then
-					name, link, quality, iLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice = GetItemInfo(itemlink)
-					if class == "Armor" or class == "Weapon" then
-						found = false
-						for i = 1, #invTypes do if equipSlot == invTypes[i] then found = true end end
-						if found == true then
-							if iLevel > maxiLevel then 
-								maxiLevelItem = itemlink
-								maxiLevel = iLevel 
-							end
-						end
-					end
-				end
+		local inventoryItemsForSlot = GetInventoryItemsForSlot(slot) 
+		for itemloc, itemid in pairs(inventoryItemsForSlot) do
+			_, link, _, iLevel = GetItemInfo(itemid)
+			if not used[link] and iLevel > maxiLevel then
+				used[maxiLevelItem] = nil -- clear the prev one
+
+				maxiLevel = iLevel
+				maxiLevelItem = link
+				maxiLevelLoc = itemloc
+				used[link] = true
 			end
 		end
 
-		Print("Equipping " .. _G[slotname] .. ": " .. maxiLevelItem .. " (" .. maxiLevel .. ")" )
-	end   
+		local currentlink = GetInventoryItemLink("player", slot)
+		currentiLevel = select(4, GetItemInfo(currentlink))
+		if maxiLevel > currentiLevel then
+			local bbag, sslot = ItemInBag(maxiLevelLoc)
+			local alink = GetContainerItemLink(bbag, sslot)
+			Print("Equipping " .. _G[slotname] .. ": " .. alink .. " (" .. maxiLevel .. ")")
+		else
+			Print("Keeping " .. _G[slotname] .. ": " .. currentlink .. " (" .. currentiLevel .. ")" )
+		end
 
+		-- See EquipCursorItem and PickupContainerItem and ClearCursor
+	end   
 end
 
 local orig = scroll:GetScript("OnValueChanged")
