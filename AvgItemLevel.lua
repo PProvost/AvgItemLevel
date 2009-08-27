@@ -16,6 +16,8 @@ limitations under the License.
 
 local slots = { "BackSlot", "ChestSlot", "FeetSlot", "Finger0Slot", "Finger1Slot", "HandsSlot", "HeadSlot", "LegsSlot", "MainHandSlot", "NeckSlot", "ShoulderSlot", "Trinket0Slot", "Trinket1Slot", "WaistSlot", "WristSlot" }
 
+local function Print(...) print("|cFF33FF99AvgItemLevel|r: ", ...) end
+
 AvgItemLevel = CreateFrame("frame")
 AvgItemLevel:SetScript("OnEvent", function(self, event, ...) if self[event] then return self[event](self, event, ...) end end)
 AvgItemLevel:RegisterEvent("ADDON_LOADED")

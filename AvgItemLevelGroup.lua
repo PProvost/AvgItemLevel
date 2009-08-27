@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ]]
 
+local function Print(...) print("|cFF33FF99AvgItemLevel|r: ", ...) end
+
 local panel = LibStub("tekPanel").new("AvgItemLevelFrame", "Average Item Level")
 
 local NUMROWS = 22
@@ -165,6 +167,69 @@ local function Show()
 	Update()
 end
 
+local equipSlots = {
+	["HEADSLOT"] = { "INVTYPE_HEAD" },
+	["NECKSLOT"] = { "INVTYPE_NECK" },
+	["SHOULDERSLOT"] = { "INVTYPE_SHOULDER" },
+	["BACKSLOT"] = { "INVTYPE_CLOAK" },
+	["CHESTSLOT"] = { "INVTYPE_ROBE", "INVTYPE_CHEST" },
+	["WRISTSLOT"] = { "INVTYPE_WRIST" },
+	["WAISTSLOT"] = { "INVTYPE_WAIST" },
+	["LEGSSLOT"] = { "INVTYPE_LEGS" },
+	["FEETSLOT"] = { "INVTYPE_FEET" },
+	["FINGER0SLOT"] = { "INVTYPE_FINGER" },
+	["FINGER1SLOT"] = { "INVTYPE_FINGER" },
+	["TRINKET0SLOT"] = { "INVTYPE_TRINKET" },
+	["TRINKET1SLOT"] = { "INVTYPE_TRINKET" },
+	["MAINHANDSLOT"] = { "INVTYPE_2HWEAPON", "INVTYPE_WEAPON", "INVTYPE_WEAPONMAINHAND" },
+}
+
+local function Equip()
+	local slotname
+	local maxiLevel
+	local maxiLevelItem 
+	local found
+	local itemlink
+	local invTypes
+	local name, link, quality, iLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice 
+
+	for slotname, _ in pairs(equipSlots) do
+		maxiLevel = 0
+		maxiLevelItem = ""
+
+		itemlink = GetInventoryItemLink("player", GetInventorySlotInfo(slotname))
+		name, link, quality, iLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice = GetItemInfo(itemlink)
+		if iLevel > maxiLevel then 
+			maxiLevel = iLevel
+			maxiLevelItem = itemlink
+		end
+
+		invTypes = equipSlots[slotname]
+
+		for bag = 0,NUM_BAG_SLOTS do
+			for slot = 1,GetContainerNumSlots(bag) do
+				itemlink = GetContainerItemLink(bag, slot)
+				if itemlink then
+					name, link, quality, iLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice = GetItemInfo(itemlink)
+					if class == "Armor" or class == "Weapon" then
+						found = false
+						for i = 1, #invTypes do if equipSlot == invTypes[i] then found = true end end
+						if found == true then
+							if iLevel > maxiLevel then 
+								maxiLevelItem = itemlink
+								maxiLevel = iLevel 
+							end
+						end
+					end
+				end
+			end
+		end
+
+		Print("Equipping " .. _G[slotname] .. ": " .. maxiLevelItem .. " (" .. maxiLevel .. ")" )
+	end   
+
+end
+
 local orig = scroll:GetScript("OnValueChanged")
 scroll:SetScript("OnValueChanged", function(self, offset, ...)
 	offset = math.floor(offset)
@@ -184,6 +249,11 @@ reportButton:SetHeight(22)
 reportButton:SetText("Report")
 reportButton:SetScript("OnClick", Report)
 
+local equipButton = LibStub("tekKonfig-Button").new(panel, "RIGHT", reportButton, "LEFT", -5, 0)
+equipButton:SetWidth(65) 
+equipButton:SetHeight(22)
+equipButton:SetText("Equip")
+equipButton:SetScript("OnClick", Equip)
 
 scroll:SetValue(0)
 panel:SetScript("OnShow", Show)
