@@ -15,6 +15,8 @@ limitations under the License.
 ]]
 
 local function Print(...) print("|cFF33FF99AvgItemLevel|r: ", ...) end
+local debugf = tekDebug and tekDebug:GetFrame("AvgItemLevel")
+local function Debug(...) if debugf then debugf:AddMessage(string.join(", ", tostringall(...))) end end
 
 local panel = LibStub("tekPanel").new("AvgItemLevelFrame", "Average Item Level")
 
@@ -171,6 +173,8 @@ local equipSlots = { "HEADSLOT", "NECKSLOT", "SHOULDERSLOT", "BACKSLOT", "CHESTS
 	"LEGSSLOT", "FEETSLOT", "FINGER0SLOT", "FINGER1SLOT", "TRINKET0SLOT", "TRINKET1SLOT", "MAINHANDSLOT", }
 
 -- Source: http://wowprogramming.com/docs/api_types#itemLocation
+
+local ITEM_INVENTORY_PLAYER = 0x00300000
 local ITEM_INVENTORY_BACKPACK = 0x00200000
 local ITEM_INVENTORY_BAGS = 0x00400000
 local MASK_BAG = 0xf00
@@ -191,6 +195,13 @@ local function ItemInBag(itemLocation)
         local slot = bit.band(itemLocation, MASK_SLOT)
         return 0, slot
     end
+end
+
+local function ItemEquipped(itemLocation)
+   if bit.band(bit.bnot(itemLocation), ITEM_INVENTORY_BACKPACK) > 0 then
+      local slot = bit.band(itemLocation, MASK_SLOT)
+      return slot
+   end
 end
 
 local function Equip()
@@ -224,8 +235,16 @@ local function Equip()
 		local currentlink = GetInventoryItemLink("player", slot)
 		currentiLevel = select(4, GetItemInfo(currentlink))
 		if maxiLevel > currentiLevel then
-			local bbag, sslot = ItemInBag(maxiLevelLoc)
-			local alink = GetContainerItemLink(bbag, sslot)
+			local bbag, alink
+			local sslot = ItemEquipped(maxiLevelLoc)
+			if sslot then
+				alink = GetInventoryItemLink("player", sslot)
+				Debug("Equipped", maxiLevelLoc, sslot, alink, maxiLevelItem)
+			else
+				bbag, sslot = ItemInBag(maxiLevelLoc)
+				alink = GetContainerItemLink(bbag, sslot)
+				Debug("Bags", maxiLevelLoc, sslot, bbag, alink, maxiLevelItem)
+			end
 			Print("Equipping " .. _G[slotname] .. ": " .. alink .. " (" .. maxiLevel .. ")")
 		else
 			Print("Keeping " .. _G[slotname] .. ": " .. currentlink .. " (" .. currentiLevel .. ")" )
@@ -243,21 +262,21 @@ scroll:SetScript("OnValueChanged", function(self, offset, ...)
 end)
 
 local refreshButton = LibStub("tekKonfig-Button").new(panel, "TOPRIGHT", -45, -43)
-refreshButton:SetWidth(65) 
+refreshButton:SetWidth(75) 
 refreshButton:SetHeight(22)
 refreshButton:SetText("Refresh")
 refreshButton:SetScript("OnClick", Show)
 
 local reportButton = LibStub("tekKonfig-Button").new(panel, "RIGHT", refreshButton, "LEFT", -5, 0)
-reportButton:SetWidth(65) 
+reportButton:SetWidth(75) 
 reportButton:SetHeight(22)
 reportButton:SetText("Report")
 reportButton:SetScript("OnClick", Report)
 
 local equipButton = LibStub("tekKonfig-Button").new(panel, "RIGHT", reportButton, "LEFT", -5, 0)
-equipButton:SetWidth(65) 
+equipButton:SetWidth(75) 
 equipButton:SetHeight(22)
-equipButton:SetText("Equip")
+equipButton:SetText("Equip Best")
 equipButton:SetScript("OnClick", Equip)
 
 scroll:SetValue(0)

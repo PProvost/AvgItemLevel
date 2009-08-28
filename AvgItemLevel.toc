@@ -7,6 +7,8 @@
 ## X-Category: Misc
 ## X-License: Apache 2.0
 
+## OptionalDeps: tekDebug, tekErr
+
 libs\LibStub.lua
 libs\CallbackHandler-1.0.lua
 libs\LibDataBroker-1.1.lua
