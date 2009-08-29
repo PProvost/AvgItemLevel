@@ -20,6 +20,8 @@ local function Debug(...) if debugf then debugf:AddMessage(string.join(", ", tos
 
 local panel = LibStub("tekPanel").new("AvgItemLevelFrame", "Average Item Level")
 
+local LibItemEquip = LibStub("LinItemEquip-1.0")
+
 local NUMROWS = 22
 local SCROLLSTEP = math.floor(NUMROWS/3)
 local scrollbox = CreateFrame("Frame", nil, panel)
@@ -210,6 +212,7 @@ local function Equip()
 	local link, iLevel
 	local used = {}
 	local slot
+	local set = {}
 
 	for i,slotname in ipairs(equipSlots) do
 		maxiLevel = 0
@@ -246,12 +249,16 @@ local function Equip()
 				Debug("Bags", maxiLevelLoc, sslot, bbag, alink, maxiLevelItem)
 			end
 			Print("Equipping " .. _G[slotname] .. ": " .. alink .. " (" .. maxiLevel .. ")")
+			set[slot] = alink
 		else
 			Print("Keeping " .. _G[slotname] .. ": " .. currentlink .. " (" .. currentiLevel .. ")" )
+			set[slot] = currentlink
 		end
 
 		-- See EquipCursorItem and PickupContainerItem and ClearCursor
 	end   
+
+	LibItemEquip:WearSet(set)
 end
 
 local orig = scroll:GetScript("OnValueChanged")
