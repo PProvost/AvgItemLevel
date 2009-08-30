@@ -13,9 +13,6 @@ libs\LibStub.lua
 libs\CallbackHandler-1.0.lua
 libs\LibDataBroker-1.1.lua
 
-libs\AceTimer-3.0.lua
-libs\LibItemEquip-1.0.lua
-
 libs\tekKonfigAboutPanel.lua
 libs\tekKonfigButton.lua
 libs\tekKonfigScroll.lua

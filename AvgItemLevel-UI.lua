@@ -20,8 +20,6 @@ local function Debug(...) if debugf then debugf:AddMessage(string.join(", ", tos
 
 local panel = LibStub("tekPanel").new("AvgItemLevelFrame", "Average Item Level")
 
-local LibItemEquip = LibStub("LibItemEquip-1.0")
-
 local averages
 
 local min, max
@@ -171,9 +169,7 @@ local function Show()
 	Update()
 end
 
-local equipSlots = { "HEADSLOT", "NECKSLOT", "SHOULDERSLOT", "BACKSLOT", "CHESTSLOT", "WRISTSLOT", "WAISTSLOT", 
-	"LEGSSLOT", "FEETSLOT", "FINGER0SLOT", "FINGER1SLOT", "TRINKET0SLOT", "TRINKET1SLOT", "MAINHANDSLOT", }
-
+local equipSlots = { "BACKSLOT", "CHESTSLOT", "FEETSLOT", "FINGER0SLOT", "FINGER1SLOT", "HANDSSLOT", "HEADSLOT", "LEGSSLOT", "MAINHANDSLOT", "NECKSLOT", "SHOULDERSLOT", "TRINKET0SLOT", "TRINKET1SLOT", "WAISTSLOT", "WRISTSLOT" }
 
 local function EquipBest()
 	local link, quality, iLevel, bag, slotName, slotId, locSlot
@@ -214,25 +210,13 @@ local function EquipBest()
 		-- local player, bank, bags, slot, bag = EquipmentManager_UnpackLocation(mask)
 
 		if maxItemLevel > currentiLevel then
-			locSlot = ItemEquipped(maxItemLoc)
-			if locSlot then
-				link = GetInventoryItemLink("player", locSlot)
-				Debug(slotName, "Equipped", maxItemLoc, locSlot, link, maxItemLink)
-			else
-				bag, locSlot = ItemInBag(maxItemLoc)
-				link = GetContainerItemLink(bag, locSlot)
-				Debug(slotName, "Bags", maxItemLoc, locSlot, bag, link, maxItemLink)
-			end
-			Print("Equipping " .. _G[slotName] .. ": " .. (link or maxItemLink) .. " (" .. maxItemLevel .. ")")
-			set[slotId] = link
+			Print("Equipping " .. _G[slotName] .. ": " .. maxItemLink .. " (" .. maxItemLevel .. ")")
+			local action = EquipmentManager_EquipItemByLocation (maxItemLoc, slotId)
+			EquipmentManager_RunAction(action)
 		else
 			Print("Keeping " .. _G[slotName] .. ": " .. currentlink .. " (" .. currentiLevel .. ")" )
-			set[slotId] = currentlink
 		end
 	end   
-
-	QQQ = set
-	-- LibItemEquip:WearSet(set)
 end
 
 local orig = scroll:GetScript("OnValueChanged")
