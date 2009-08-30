@@ -57,6 +57,15 @@ function AvgItemLevel:UNIT_TARGET(event, unit)
 	if InspectFrame and InspectFrame:IsVisible() then self:CalculateAndShow("target") end
 end
 
+function AvgItemLevel:GetAdjustedItemLevel(quality, iLevel)
+	local result = iLevel 
+	if not quality then result = 0
+	elseif quality == 3 then result = iLevel - 13
+	elseif quality == 2 then result = iLevel - 26
+	elseif quality < 2 then result = 0 end
+	return result
+end
+
 function AvgItemLevel:CalculateAverage(unit)
 	local total = 0
 	local slot, link, quality, _, iLevel
@@ -66,10 +75,7 @@ function AvgItemLevel:CalculateAverage(unit)
 		link = GetInventoryItemLink(unit, slot)
 		if link then
 			_, _, quality, iLevel = GetItemInfo(link)
-			if not quality then iLevel = 0
-			elseif quality == 3 then iLevel = iLevel - 13
-			elseif quality == 2 then iLevel = iLevel - 26
-			elseif quality < 2 then iLevel = 0 end
+			iLevel = self:GetAdjustedItemLevel(quality, iLevel)
 		end
 		total = total + iLevel
 	end

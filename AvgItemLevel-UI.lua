@@ -20,8 +20,11 @@ local function Debug(...) if debugf then debugf:AddMessage(string.join(", ", tos
 
 local panel = LibStub("tekPanel").new("AvgItemLevelFrame", "Average Item Level")
 
-local LibItemEquip = LibStub("LinItemEquip-1.0")
+local LibItemEquip = LibStub("LibItemEquip-1.0")
 
+local averages
+
+local min, max
 local NUMROWS = 22
 local SCROLLSTEP = math.floor(NUMROWS/3)
 local scrollbox = CreateFrame("Frame", nil, panel)
@@ -111,14 +114,11 @@ local function GetGroupAverages()
 	return result
 end
 
-local offset = 0
-local averages
-local min, max
-local avg
-
 local function Update()
 	local avgstring
 	local i = 0
+	local avg
+	local offset = 0
 
 	for index,average in ipairs(averages) do
 		avg = average.average
@@ -142,11 +142,11 @@ local function Update()
 	end
 end
 
-local function Report()
+local function PrintReport()
 	local chatType = GetNumRaidMembers() > 0 and "RAID" or "PARTY"
 	local msg
 
-	local averages = GetGroupAverages()
+	averages = GetGroupAverages()
 	SendChatMessage("AvgItemLevel Report", chatType)
 	SendChatMessage("-------------------------------", chatType)
 	for index, average in ipairs(averages) do
@@ -174,91 +174,65 @@ end
 local equipSlots = { "HEADSLOT", "NECKSLOT", "SHOULDERSLOT", "BACKSLOT", "CHESTSLOT", "WRISTSLOT", "WAISTSLOT", 
 	"LEGSSLOT", "FEETSLOT", "FINGER0SLOT", "FINGER1SLOT", "TRINKET0SLOT", "TRINKET1SLOT", "MAINHANDSLOT", }
 
--- Source: http://wowprogramming.com/docs/api_types#itemLocation
 
-local ITEM_INVENTORY_PLAYER = 0x00300000
-local ITEM_INVENTORY_BACKPACK = 0x00200000
-local ITEM_INVENTORY_BAGS = 0x00400000
-local MASK_BAG = 0xf00
-local MASK_SLOT = 0x3f
-local bagMap = {
-    [0x100] = 1,
-    [0x200] = 2,
-    [0x400] = 3,
-    [0x800] = 4,
-}
-
-local function ItemInBag(itemLocation)
-    if bit.band(itemLocation, ITEM_INVENTORY_BAGS) > 0 then
-        local bag = bagMap[bit.band(itemLocation, MASK_BAG)]
-        local slot = bit.band(itemLocation, MASK_SLOT)
-        return bag, slot
-    elseif bit.band(itemLocation, ITEM_INVENTORY_BACKPACK) > 0 then
-        local slot = bit.band(itemLocation, MASK_SLOT)
-        return 0, slot
-    end
-end
-
-local function ItemEquipped(itemLocation)
-   if bit.band(bit.bnot(itemLocation), ITEM_INVENTORY_BACKPACK) > 0 then
-      local slot = bit.band(itemLocation, MASK_SLOT)
-      return slot
-   end
-end
-
-local function Equip()
-	local slotname
-	local maxiLevel, maxiLevelItem, maxiLevelLoc
-	local link, iLevel
+local function EquipBest()
+	local link, quality, iLevel, bag, slotName, slotId, locSlot
+	local maxItemLevel, maxItemLink, maxItemLoc
+	local currentlink, currentiLevel
 	local used = {}
-	local slot
 	local set = {}
+	local inventoryItemsForSlot, currentLink
+	local itemid, itemloc
 
-	for i,slotname in ipairs(equipSlots) do
-		maxiLevel = 0
-		maxiLevelItem = ""
+	for i,slotName in ipairs(equipSlots) do
+		maxItemLevel = 0
+		maxItemLink = ""
 
-		slot = GetInventorySlotInfo(slotname)
+		slotId = GetInventorySlotInfo(slotName)
 
-		-- todo adjusted ilevel (taking quality into account)
-
-		local inventoryItemsForSlot = GetInventoryItemsForSlot(slot) 
+		inventoryItemsForSlot = GetInventoryItemsForSlot(slotId) 
 		for itemloc, itemid in pairs(inventoryItemsForSlot) do
-			_, link, _, iLevel = GetItemInfo(itemid)
-			if not used[link] and iLevel > maxiLevel then
-				used[maxiLevelItem] = nil -- clear the prev one
-
-				maxiLevel = iLevel
-				maxiLevelItem = link
-				maxiLevelLoc = itemloc
+			_, link, quality, oiLevel = GetItemInfo(itemid)
+			iLevel = AvgItemLevel:GetAdjustedItemLevel(quality, oiLevel)
+			if not used[link] and iLevel > maxItemLevel then
+				used[maxItemLink] = nil -- clear the prev one
+				maxItemLevel = iLevel
+				maxItemLink = link
+				maxItemLoc = itemloc
 				used[link] = true
 			end
 		end
 
-		local currentlink = GetInventoryItemLink("player", slot)
-		currentiLevel = select(4, GetItemInfo(currentlink))
-		if maxiLevel > currentiLevel then
-			local bbag, alink
-			local sslot = ItemEquipped(maxiLevelLoc)
-			if sslot then
-				alink = GetInventoryItemLink("player", sslot)
-				Debug("Equipped", maxiLevelLoc, sslot, alink, maxiLevelItem)
-			else
-				bbag, sslot = ItemInBag(maxiLevelLoc)
-				alink = GetContainerItemLink(bbag, sslot)
-				Debug("Bags", maxiLevelLoc, sslot, bbag, alink, maxiLevelItem)
-			end
-			Print("Equipping " .. _G[slotname] .. ": " .. alink .. " (" .. maxiLevel .. ")")
-			set[slot] = alink
+		currentlink = GetInventoryItemLink("player", slotId)
+		if currentlink then 
+			currentiLevel = select(4, GetItemInfo(currentlink))
 		else
-			Print("Keeping " .. _G[slotname] .. ": " .. currentlink .. " (" .. currentiLevel .. ")" )
-			set[slot] = currentlink
+			currentlink = "None"
+			currentiLevel = 0
 		end
 
-		-- See EquipCursorItem and PickupContainerItem and ClearCursor
+		-- local player, bank, bags, slot, bag = EquipmentManager_UnpackLocation(mask)
+
+		if maxItemLevel > currentiLevel then
+			locSlot = ItemEquipped(maxItemLoc)
+			if locSlot then
+				link = GetInventoryItemLink("player", locSlot)
+				Debug(slotName, "Equipped", maxItemLoc, locSlot, link, maxItemLink)
+			else
+				bag, locSlot = ItemInBag(maxItemLoc)
+				link = GetContainerItemLink(bag, locSlot)
+				Debug(slotName, "Bags", maxItemLoc, locSlot, bag, link, maxItemLink)
+			end
+			Print("Equipping " .. _G[slotName] .. ": " .. (link or maxItemLink) .. " (" .. maxItemLevel .. ")")
+			set[slotId] = link
+		else
+			Print("Keeping " .. _G[slotName] .. ": " .. currentlink .. " (" .. currentiLevel .. ")" )
+			set[slotId] = currentlink
+		end
 	end   
 
-	LibItemEquip:WearSet(set)
+	QQQ = set
+	-- LibItemEquip:WearSet(set)
 end
 
 local orig = scroll:GetScript("OnValueChanged")
@@ -278,13 +252,13 @@ local reportButton = LibStub("tekKonfig-Button").new(panel, "RIGHT", refreshButt
 reportButton:SetWidth(75) 
 reportButton:SetHeight(22)
 reportButton:SetText("Report")
-reportButton:SetScript("OnClick", Report)
+reportButton:SetScript("OnClick", PrintReport)
 
 local equipButton = LibStub("tekKonfig-Button").new(panel, "RIGHT", reportButton, "LEFT", -5, 0)
 equipButton:SetWidth(75) 
 equipButton:SetHeight(22)
 equipButton:SetText("Equip Best")
-equipButton:SetScript("OnClick", Equip)
+equipButton:SetScript("OnClick", EquipBest)
 
 scroll:SetValue(0)
 panel:SetScript("OnShow", Show)

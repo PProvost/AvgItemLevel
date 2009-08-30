@@ -3,7 +3,7 @@
 assert(LibStub, "LibItemEquip-1.0 requires LibStub")
 assert(LibStub:GetLibrary("AceTimer-3.0", true), "LibItemEquip-1.0 requires AceTimer-3.0")
 
-local lib, oldminor = LibStub:NewLibrary("LibItemEquip-1.1", 1)
+local lib, oldminor = LibStub:NewLibrary("LibItemEquip-1.0", 1)
 if not lib then return end
 oldminor = oldminor or 0
 
