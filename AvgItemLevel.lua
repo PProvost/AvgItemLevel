@@ -14,9 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ]]
 
-local slots = { "BackSlot", "ChestSlot", "FeetSlot", "Finger0Slot", "Finger1Slot", "HandsSlot", "HeadSlot", "LegsSlot", "MainHandSlot", "NeckSlot", "ShoulderSlot", "Trinket0Slot", "Trinket1Slot", "WaistSlot", "WristSlot" }
+-- Only these slots matter for vehicle effective iLevel
+local equipSlots = { "BACKSLOT", "CHESTSLOT", "FEETSLOT", "FINGER0SLOT", "FINGER1SLOT", "HANDSSLOT", "HEADSLOT", "LEGSSLOT", "MAINHANDSLOT", "NECKSLOT", "SHOULDERSLOT", "TRINKET0SLOT", "TRINKET1SLOT", "WAISTSLOT", "WRISTSLOT" }
+
+local L = setmetatable({}, {__index=function(t,i) return i end})
 
 local function Print(...) print("|cFF33FF99AvgItemLevel|r: ", ...) end
+local debugf = tekDebug and tekDebug:GetFrame("AvgItemLevel")
+local function Debug(...) if debugf then debugf:AddMessage(string.join(", ", tostringall(...))) end end
 
 AvgItemLevel = CreateFrame("frame")
 AvgItemLevel:SetScript("OnEvent", function(self, event, ...) if self[event] then return self[event](self, event, ...) end end)
@@ -41,9 +46,25 @@ function AvgItemLevel:ADDON_LOADED(event, addon)
 end
 
 function AvgItemLevel:PLAYER_LOGIN()
-	self.ppdString = PaperDollFrame:CreateFontString("AvgItemLevelPpdString", "OVERLAY", "GameFontNormalSmall")
-	self.ppdString:SetPoint("BOTTOMRIGHT", PaperDollFrame, "BOTTOMRIGHT", -45, 85)
+	local butt = CreateFrame("Button", nil, PaperDollFrame)
+	butt:SetPoint("BOTTOMRIGHT", PaperDollFrame, "BOTTOMRIGHT", -45, 83)
+	butt:SetWidth(45); butt:SetHeight(25)
+	self.ppdString = butt:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+	self.ppdString:SetAllPoints()
 	self.ppdString:SetJustifyH("RIGHT")
+
+	butt:SetScript("OnEnter", function(self)
+		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+		GameTooltip:SetText(L["Your current effective average iLevel.\nTo equip your highest iLevel set\nautomatically, Alt+Click here."])
+	end)
+	butt:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+	butt:SetScript("OnClick", function(self, button)
+		if button == "LeftButton" and IsAltKeyDown() then
+			AvgItemLevel:EquipBest()
+		end
+	end)
+
 	PaperDollFrame:HookScript("OnShow", function(self) AvgItemLevel:CalculateAndShow("player") end)
 	self:UnregisterEvent("PLAYER_LOGIN"); self.PLAYER_LOGIN = nil
 end
@@ -69,9 +90,9 @@ end
 function AvgItemLevel:CalculateAverage(unit)
 	local total = 0
 	local slot, link, quality, _, iLevel
-	for i = 1,#slots do
+	for i = 1,#equipSlots do
 		iLevel = 0
-		slot = GetInventorySlotInfo(slots[i])
+		slot = GetInventorySlotInfo(equipSlots[i])
 		link = GetInventoryItemLink(unit, slot)
 		if link then
 			_, _, quality, iLevel = GetItemInfo(link)
@@ -79,11 +100,58 @@ function AvgItemLevel:CalculateAverage(unit)
 		end
 		total = total + iLevel
 	end
-	return total/#slots
+	return total/#equipSlots
 end
 
 function AvgItemLevel:CalculateAndShow(unit)
 	local avg = self:CalculateAverage(unit)
 	local fs = (unit == "target") and self.inspString or self.ppdString
 	fs:SetText( string.format("Avg iLvl\n%.2f", avg) )
+end
+
+
+function AvgItemLevel:EquipBest()
+	local link, quality, iLevel, bag, slotName, slotId, locSlot
+	local maxItemLevel, maxItemLink, maxItemLoc
+	local currentlink, currentiLevel
+	local used = {}
+	local set = {}
+	local inventoryItemsForSlot, currentLink
+	local itemid, itemloc
+
+	for i,slotName in ipairs(equipSlots) do
+		maxItemLevel = 0
+		maxItemLink = ""
+
+		slotId = GetInventorySlotInfo(slotName)
+
+		inventoryItemsForSlot = GetInventoryItemsForSlot(slotId) 
+		for itemloc, itemid in pairs(inventoryItemsForSlot) do
+			_, link, quality, oiLevel = GetItemInfo(itemid)
+			iLevel = self:GetAdjustedItemLevel(quality, oiLevel)
+			if not used[link] and iLevel > maxItemLevel then
+				used[maxItemLink] = nil -- clear the prev one
+				maxItemLevel = iLevel
+				maxItemLink = link
+				maxItemLoc = itemloc
+				used[link] = true
+			end
+		end
+
+		currentlink = GetInventoryItemLink("player", slotId)
+		if currentlink then 
+			currentiLevel = select(4, GetItemInfo(currentlink))
+		else
+			currentlink = "None"
+			currentiLevel = 0
+		end
+
+		if maxItemLevel > currentiLevel then
+			Debug("Equipping " .. _G[slotName] .. ": " .. maxItemLink .. " (" .. maxItemLevel .. ")")
+			local action = EquipmentManager_EquipItemByLocation(maxItemLoc, slotId)
+			EquipmentManager_RunAction(action)
+		else
+			Debug("Keeping " .. _G[slotName] .. ": " .. currentlink .. " (" .. currentiLevel .. ")" )
+		end
+	end   
 end
