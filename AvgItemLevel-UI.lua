@@ -169,56 +169,6 @@ local function Show()
 	Update()
 end
 
-local equipSlots = { "BACKSLOT", "CHESTSLOT", "FEETSLOT", "FINGER0SLOT", "FINGER1SLOT", "HANDSSLOT", "HEADSLOT", "LEGSSLOT", "MAINHANDSLOT", "NECKSLOT", "SHOULDERSLOT", "TRINKET0SLOT", "TRINKET1SLOT", "WAISTSLOT", "WRISTSLOT" }
-
-local function EquipBest()
-	local link, quality, iLevel, bag, slotName, slotId, locSlot
-	local maxItemLevel, maxItemLink, maxItemLoc
-	local currentlink, currentiLevel
-	local used = {}
-	local set = {}
-	local inventoryItemsForSlot, currentLink
-	local itemid, itemloc
-
-	for i,slotName in ipairs(equipSlots) do
-		maxItemLevel = 0
-		maxItemLink = ""
-
-		slotId = GetInventorySlotInfo(slotName)
-
-		inventoryItemsForSlot = GetInventoryItemsForSlot(slotId) 
-		for itemloc, itemid in pairs(inventoryItemsForSlot) do
-			_, link, quality, oiLevel = GetItemInfo(itemid)
-			iLevel = AvgItemLevel:GetAdjustedItemLevel(quality, oiLevel)
-			if not used[link] and iLevel > maxItemLevel then
-				used[maxItemLink] = nil -- clear the prev one
-				maxItemLevel = iLevel
-				maxItemLink = link
-				maxItemLoc = itemloc
-				used[link] = true
-			end
-		end
-
-		currentlink = GetInventoryItemLink("player", slotId)
-		if currentlink then 
-			currentiLevel = select(4, GetItemInfo(currentlink))
-		else
-			currentlink = "None"
-			currentiLevel = 0
-		end
-
-		-- local player, bank, bags, slot, bag = EquipmentManager_UnpackLocation(mask)
-
-		if maxItemLevel > currentiLevel then
-			Print("Equipping " .. _G[slotName] .. ": " .. maxItemLink .. " (" .. maxItemLevel .. ")")
-			local action = EquipmentManager_EquipItemByLocation (maxItemLoc, slotId)
-			EquipmentManager_RunAction(action)
-		else
-			Print("Keeping " .. _G[slotName] .. ": " .. currentlink .. " (" .. currentiLevel .. ")" )
-		end
-	end   
-end
-
 local orig = scroll:GetScript("OnValueChanged")
 scroll:SetScript("OnValueChanged", function(self, offset, ...)
 	offset = math.floor(offset)
@@ -242,7 +192,7 @@ local equipButton = LibStub("tekKonfig-Button").new(panel, "RIGHT", reportButton
 equipButton:SetWidth(75) 
 equipButton:SetHeight(22)
 equipButton:SetText("Equip Best")
-equipButton:SetScript("OnClick", EquipBest)
+equipButton:SetScript("OnClick", function() AvgItemLevel:EquipBest() end)
 
 scroll:SetValue(0)
 panel:SetScript("OnShow", Show)
