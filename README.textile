@@ -4,7 +4,7 @@ AvgItemLevel is a World of Warcraft addon that lets you see the effective averag
 
 If you are setting up raid assignments, however, that can get a bit tedious. To assist with that, you can use the /avgilevel command to bring up the party/raid report window. To report the averages to your group, simply click the "Report" button. A LibDataBroker launcher is also included that when clicked will open the report window.
 
-%{color:red}&#42;&#42;New&#42;&#42;% To automatically equip the highest iLevel piece for the relevant slots, Alt-click the label on the character frame or click the "Equip Best" button on the report window.
+To automatically equip the highest iLevel piece for the relevant slots, Alt-Click the label on the character frame or click the "Equip Best" button on the report window.
 
 No configuration required, just install and go.
 
