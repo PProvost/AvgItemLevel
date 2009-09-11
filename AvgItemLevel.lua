@@ -46,9 +46,10 @@ function AvgItemLevel:ADDON_LOADED(event, addon)
 end
 
 function AvgItemLevel:PLAYER_LOGIN()
-	local butt = CreateFrame("Button", nil, PaperDollFrame)
-	butt:SetPoint("BOTTOMRIGHT", PaperDollFrame, "BOTTOMRIGHT", -45, 83)
-	butt:SetWidth(45); butt:SetHeight(25)
+	local butt = CreateFrame("Button", nil, CharacterModelFrame)
+	butt:SetFrameStrata("DIALOG")
+	butt:SetPoint("TOPRIGHT", -36, 0)
+	butt:SetWidth(65); butt:SetHeight(35)
 	self.ppdString = butt:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 	self.ppdString:SetAllPoints()
 	self.ppdString:SetJustifyH("RIGHT")
