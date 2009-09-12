@@ -19,6 +19,7 @@ local debugf = tekDebug and tekDebug:GetFrame("AvgItemLevel")
 local function Debug(...) if debugf then debugf:AddMessage(string.join(", ", tostringall(...))) end end
 
 local panel = LibStub("tekPanel").new("AvgItemLevelFrame", "Average Item Level")
+panel:SetAttribute("UIPanelLayout-area", "middle")
 
 local averages
 
@@ -197,13 +198,9 @@ equipButton:SetScript("OnClick", function() AvgItemLevel:EquipBestVehicleSet() e
 scroll:SetValue(0)
 panel:SetScript("OnShow", Show)
 
-SLASH_AVGITEMLEVEL1 = "/avgilevel"
-SLASH_AVGITEMLEVEL2 = "/avgitemlevel"
-SlashCmdList.AVGITEMLEVEL = function(msg)
+-- Plug it into the main addon table
+function AvgItemLevel:ShowReportPanel()
 	ShowUIPanel(panel)	
 end
- 
-local ldb = LibStub:GetLibrary("LibDataBroker-1.1")
-local dataobj = ldb:GetDataObjectByName("AvgItemLevel") or ldb:NewDataObject("AvgItemLevel", {type = "launcher", icon = "Interface\\Icons\\Ability_Vehicle_SiegeEngineRam"})
-dataobj.OnClick = SlashCmdList.AVGITEMLEVEL
+
 

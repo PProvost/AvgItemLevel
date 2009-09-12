@@ -31,6 +31,8 @@ AvgItemLevel:RegisterEvent("ADDON_LOADED")
 AvgItemLevel:RegisterEvent("UNIT_INVENTORY_CHANGED")
 AvgItemLevel:RegisterEvent("UNIT_TARGET")
 
+AvgItemLevel.icon = "Interface\\Icons\\INV_Helmet_49"
+
 local selfLoaded, inspectLoaded
 function AvgItemLevel:ADDON_LOADED(event, addon)
 	if addon:lower() == "avgitemlevel" then 
@@ -49,13 +51,9 @@ end
 
 function AvgItemLevel:PLAYER_LOGIN()
 	local butt = CreateFrame("Button", nil, PaperDollFrame)
-	butt:SetNormalTexture("Interface\\Icons\\INV_Helmet_49")
-	-- butt:SetFrameStrata("DIALOG")
+	butt:SetNormalTexture(self.icon)
 	butt:SetPoint("BOTTOMRIGHT", -45, 84)
 	butt:SetWidth(22); butt:SetHeight(22)
-	self.ppdString = butt:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-	self.ppdString:SetAllPoints()
-	self.ppdString:SetJustifyH("RIGHT")
 
 	butt:SetScript("OnEnter", function(self)
 		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
@@ -83,7 +81,7 @@ function AvgItemLevel:PLAYER_LOGIN()
 			if IsShiftKeyDown() then 
 				AvgItemLevel:EquipBestVehicleSet()
 			else
-				SlashCmdList.AVGITEMLEVEL() -- hack
+				AvgItemLevel:ShowReportPanel()
 			end 
 		end
 	end)
@@ -219,4 +217,20 @@ function AvgItemLevel:GetBestVehicleSet()
 
 	return resultSet
 end
+
+SLASH_AVGITEMLEVEL1 = "/avgilevel"
+SLASH_AVGITEMLEVEL2 = "/avgitemlevel"
+SLASH_AVGITEMLEVEL3 = "/ail"
+SlashCmdList.AVGITEMLEVEL = function(msg)
+	AvgItemLevel:ShowReportPanel()
+end
+ 
+-- TODO: Add the same click options and tooltip here as we use on the control panel
+-- maybe even show the iLevel text
+local ldb = LibStub:GetLibrary("LibDataBroker-1.1")
+local dataobj = ldb:GetDataObjectByName("AvgItemLevel") or ldb:NewDataObject("AvgItemLevel", {
+	type = "launcher", 
+	icon = AvgItemLevel.icon,
+})
+dataobj.OnClick = AvgItemLevel:ShowReportPanel()
 
