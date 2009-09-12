@@ -18,7 +18,7 @@ local function Print(...) print("|cFF33FF99AvgItemLevel|r: ", ...) end
 local debugf = tekDebug and tekDebug:GetFrame("AvgItemLevel")
 local function Debug(...) if debugf then debugf:AddMessage(string.join(", ", tostringall(...))) end end
 
-local panel = LibStub("tekPanel").new("AvgItemLevelFrame", "Average Item Level")
+local panel = LibStub("tekPanel").new("AvgItemLevelFrame", "Effective Vehicle iLevel")
 panel:SetAttribute("UIPanelLayout-area", "middle")
 panel:SetAttribute("UIPanelLayout-pushable", 5)
 
@@ -89,11 +89,15 @@ local function GetGroupAverages()
 	else
 		unitbase = "party"
 		groupsize = GetNumPartyMembers()
-		table.insert(result, { name=UnitName("player").. " (player)", average=AvgItemLevel:CalculateAverage("player") })
+		table.insert(result, { name=UnitName("player").. " (player)", average=AvgItemLevel:CalculateAverage("player", AvgItemLevel.VEHICLE_SLOTS) })
 	end
 
 	if UnitExists("target") and not (UnitInParty("target") or UnitInRaid("target")) then
-		table.insert(result, { name=UnitName("target").. " (target)", average=AvgItemLevel:CalculateAverage("player") })
+		if CanInspect("target") then
+			NotifyInspect("target")
+			table.insert(result, { name=UnitName("target").. " (target)", average=AvgItemLevel:CalculateAverage("target", AvgItemLevel.VEHICLE_SLOTS) })
+			ClearInspectPlayer()
+		end
 	end
 
 	for i = 1, groupsize do
@@ -101,7 +105,7 @@ local function GetGroupAverages()
 		local name = UnitName(unit)
 		if CanInspect(unit) then
 			NotifyInspect(unit)
-			local avg = AvgItemLevel:CalculateAverage(unit)
+			local avg = AvgItemLevel:CalculateAverage(unit, AvgItemLevel.VEHICLE_SLOTS)
 			table.insert(result, {name=name, average=avg})
 			ClearInspectPlayer()
 		else

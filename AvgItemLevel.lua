@@ -14,16 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ]]
 
--- Only these slots matter for vehicle effective iLevel
--- always make sure MAINHANDSLOT comes before SECONDARYHANDSLOT if they both appear in the list
-local vehicleSlots = { "BACKSLOT", "CHESTSLOT", "FEETSLOT", "FINGER0SLOT", "FINGER1SLOT", "HANDSSLOT", "HEADSLOT", "LEGSSLOT", "MAINHANDSLOT", "NECKSLOT", "SHOULDERSLOT", "TRINKET0SLOT", "TRINKET1SLOT", "WAISTSLOT", "WRISTSLOT" }
-local allSlots = { "BACKSLOT", "CHESTSLOT", "FEETSLOT", "FINGER0SLOT", "FINGER1SLOT", "HANDSSLOT", "HEADSLOT", "LEGSSLOT", "MAINHANDSLOT", "NECKSLOT", "RANGEDSLOT", "SECONDARYHANDSLOT", "SHOULDERSLOT", "TRINKET0SLOT", "TRINKET1SLOT", "WAISTSLOT", "WRISTSLOT" }
-
 local L = setmetatable({}, {__index=function(t,i) return i end})
-
 local function Print(...) print("|cFF33FF99AvgItemLevel|r: ", ...) end
 local debugf = tekDebug and tekDebug:GetFrame("AvgItemLevel")
 local function Debug(...) if debugf then debugf:AddMessage(string.join(", ", tostringall(...))) end end
+
+-- Main addon event frame
+AvgItemLevel = CreateFrame("frame")
+AvgItemLevel:SetScript("OnEvent", function(self, event, ...) if self[event] then return self[event](self, event, ...) end end)
+AvgItemLevel:RegisterEvent("ADDON_LOADED")
+AvgItemLevel:RegisterEvent("UNIT_INVENTORY_CHANGED")
+AvgItemLevel.icon = "Interface\\Icons\\INV_Helmet_49"
+
+-- Only these slots matter for vehicle effective iLevel
+-- always make sure MAINHANDSLOT comes before SECONDARYHANDSLOT if they both appear in the list
+AvgItemLevel.VEHICLE_SLOTS = { "BACKSLOT", "CHESTSLOT", "FEETSLOT", "FINGER0SLOT", "FINGER1SLOT", "HANDSSLOT", "HEADSLOT", "LEGSSLOT", "MAINHANDSLOT", "NECKSLOT", "SHOULDERSLOT", "TRINKET0SLOT", "TRINKET1SLOT", "WAISTSLOT", "WRISTSLOT" }
+AvgItemLevel.ALL_SLOTS = { "BACKSLOT", "CHESTSLOT", "FEETSLOT", "FINGER0SLOT", "FINGER1SLOT", "HANDSSLOT", "HEADSLOT", "LEGSSLOT", "MAINHANDSLOT", "NECKSLOT", "RANGEDSLOT", "SECONDARYHANDSLOT", "SHOULDERSLOT", "TRINKET0SLOT", "TRINKET1SLOT", "WAISTSLOT", "WRISTSLOT" }
 
 local function GetAdjustedItemLevel(quality, iLevel)
 	local result = iLevel 
@@ -36,37 +42,28 @@ end
 
 local function ShowTooltip(owner, unit, anchor)
 	GameTooltip:SetOwner(owner, anchor)
-		GameTooltip:AddDoubleLine("|cffffffffAverage Equipped iLevel|r", string.format("|cffffffff%.2f|r", AvgItemLevel:CalculateAverage(unit, allSlots)))
-		GameTooltip:AddLine(" ")
+	GameTooltip:AddDoubleLine("|cffffffffAverage Equipped iLevel|r", string.format("|cffffffff%.2f|r", AvgItemLevel:CalculateAverage(unit, AvgItemLevel.ALL_SLOTS)))
+	GameTooltip:AddLine(" ")
 
-		local vil = AvgItemLevel:CalculateAverage(unit, vehicleSlots)
-		GameTooltip:AddDoubleLine("|cffffffffEffective Vehicle iLevel|r", string.format("|cffffffff%.2f|r", vil))
+	local vil = AvgItemLevel:CalculateAverage(unit, AvgItemLevel.VEHICLE_SLOTS)
+	GameTooltip:AddDoubleLine("|cffffffffEffective Vehicle iLevel|r", string.format("|cffffffff%.2f|r", vil))
+	GameTooltip:AddDoubleLine("|cffffffffAppx Vehicle Health Bonus|r", string.format("|cffffffff%.2f%%|r", vil-170))
+	GameTooltip:AddLine(" ")
+
+	if unit == "player" then
+		vil = AvgItemLevel:GetBestVehicleSetAvg() 
+		GameTooltip:AddDoubleLine("|cffffffffBest Available Vehicle Set|r", string.format("|cffffffff%.2f|r", vil))
 		GameTooltip:AddDoubleLine("|cffffffffAppx Vehicle Health Bonus|r", string.format("|cffffffff%.2f%%|r", vil-170))
 		GameTooltip:AddLine(" ")
+	end
 
-		if unit == "player" then
-			vil = AvgItemLevel:GetBestVehicleSetAvg() 
-			GameTooltip:AddDoubleLine("|cffffffffBest Available Vehicle Set|r", string.format("|cffffffff%.2f|r", vil))
-			GameTooltip:AddDoubleLine("|cffffffffAppx Vehicle Health Bonus|r", string.format("|cffffffff%.2f%%|r", vil-170))
-			GameTooltip:AddLine(" ")
-		end
+	GameTooltip:AddLine("|cffffff00Click|r to show the group report frame")
 
-		GameTooltip:AddLine("|cffffff00Click|r to show the group report frame")
-
-		if unit == "player" then
-			GameTooltip:AddLine("|cffffff00Shift-Click|r to equip best available vehicle set")
-		end
-		GameTooltip:Show()
+	if unit == "player" then
+		GameTooltip:AddLine("|cffffff00Shift-Click|r to equip best available vehicle set")
+	end
+	GameTooltip:Show()
 end
-
--- Main addon event frame
--- TODO: Maybe this can be the charpane button frame to save us an extra frame
-AvgItemLevel = CreateFrame("frame")
-AvgItemLevel:SetScript("OnEvent", function(self, event, ...) if self[event] then return self[event](self, event, ...) end end)
-AvgItemLevel:RegisterEvent("ADDON_LOADED")
-AvgItemLevel:RegisterEvent("UNIT_INVENTORY_CHANGED")
-
-AvgItemLevel.icon = "Interface\\Icons\\INV_Helmet_49"
 
 local ldb = LibStub:GetLibrary("LibDataBroker-1.1")
 local dataobj = ldb:GetDataObjectByName("AvgItemLevel") or ldb:NewDataObject("AvgItemLevel", {
@@ -77,7 +74,7 @@ local dataobj = ldb:GetDataObjectByName("AvgItemLevel") or ldb:NewDataObject("Av
 
 function AvgItemLevel:UNIT_INVENTORY_CHANGED(unit)
 	if unit == "player" then
-		dataobj.text = string.format("|cffffffff%.2f|r", AvgItemLevel:CalculateAverage(unit, allSlots))
+		dataobj.text = string.format("|cffffffff%.2f|r", AvgItemLevel:CalculateAverage(unit, self.ALL_SLOTS))
 	end
 end
 
@@ -132,7 +129,7 @@ function AvgItemLevel:PLAYER_LOGIN()
 end
 
 function AvgItemLevel:CalculateAverage(unit, slots)
-	if not slots then slots = vehicleSlots end
+	if not slots then slots = self.VEHICLE_SLOTS end
 	local sum, count = 0, 0
 	local slot, link, quality, _, iLevel, equipSlot
 	local twoHanderEquipped = nil
@@ -198,7 +195,7 @@ function AvgItemLevel:GetBestVehicleSet()
 	local inventoryItemsForSlot, currentLink
 	local itemid, itemloc
 
-	for i,slotName in ipairs(vehicleSlots) do
+	for i,slotName in ipairs(self.VEHICLE_SLOTS) do
 		maxItemLevel = 0
 		maxItemLink = ""
 
