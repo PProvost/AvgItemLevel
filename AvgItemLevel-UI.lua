@@ -20,6 +20,7 @@ local function Debug(...) if debugf then debugf:AddMessage(string.join(", ", tos
 
 local panel = LibStub("tekPanel").new("AvgItemLevelFrame", "Average Item Level")
 panel:SetAttribute("UIPanelLayout-area", "middle")
+panel:SetAttribute("UIPanelLayout-pushable", 5)
 
 local averages
 
