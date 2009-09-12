@@ -89,7 +89,11 @@ local function GetGroupAverages()
 	else
 		unitbase = "party"
 		groupsize = GetNumPartyMembers()
-		table.insert(result, { name=UnitName("player"), average=AvgItemLevel:CalculateAverage("player") })
+		table.insert(result, { name=UnitName("player").. " (player)", average=AvgItemLevel:CalculateAverage("player") })
+	end
+
+	if UnitExists("target") and not (UnitInParty("target") or UnitInRaid("target")) then
+		table.insert(result, { name=UnitName("target").. " (target)", average=AvgItemLevel:CalculateAverage("player") })
 	end
 
 	for i = 1, groupsize do
