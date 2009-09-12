@@ -19,4 +19,4 @@ libs\tekKonfigScroll.lua
 libs\tekPanel.lua
 
 AvgItemLevel.lua
-AvgItemLevel-UI.lua
+AvgItemLevel-ReportPanel.lua
