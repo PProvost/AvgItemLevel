@@ -15,7 +15,9 @@ limitations under the License.
 ]]
 
 -- Only these slots matter for vehicle effective iLevel
-local equipSlots = { "BACKSLOT", "CHESTSLOT", "FEETSLOT", "FINGER0SLOT", "FINGER1SLOT", "HANDSSLOT", "HEADSLOT", "LEGSSLOT", "MAINHANDSLOT", "NECKSLOT", "SHOULDERSLOT", "TRINKET0SLOT", "TRINKET1SLOT", "WAISTSLOT", "WRISTSLOT" }
+-- always make sure MAINHANDSLOT comes before SECONDARYHANDSLOT if they both appear in the list
+local vehicleSlots = { "BACKSLOT", "CHESTSLOT", "FEETSLOT", "FINGER0SLOT", "FINGER1SLOT", "HANDSSLOT", "HEADSLOT", "LEGSSLOT", "MAINHANDSLOT", "NECKSLOT", "SHOULDERSLOT", "TRINKET0SLOT", "TRINKET1SLOT", "WAISTSLOT", "WRISTSLOT" }
+local allSlots = { "BACKSLOT", "CHESTSLOT", "FEETSLOT", "FINGER0SLOT", "FINGER1SLOT", "HANDSSLOT", "HEADSLOT", "LEGSSLOT", "MAINHANDSLOT", "NECKSLOT", "RANGEDSLOT", "SECONDARYHANDSLOT", "SHOULDERSLOT", "TRINKET0SLOT", "TRINKET1SLOT", "WAISTSLOT", "WRISTSLOT" }
 
 local L = setmetatable({}, {__index=function(t,i) return i end})
 
@@ -36,8 +38,8 @@ function AvgItemLevel:ADDON_LOADED(event, addon)
 		if IsLoggedIn() then self:PLAYER_LOGIN() else self:RegisterEvent("PLAYER_LOGIN") end
 		selfLoaded = true
 	elseif addon:lower() == "blizzard_inspectui" then
-		self.inspString = InspectPaperDollFrame:CreateFontString("AvgItemLevelInspString", "OVERLAY", "GameFontNormalSmall")
-		self.inspString:SetPoint("BOTTOMRIGHT", InspectPaperDollFrame, "BOTTOMRIGHT", -50, 85)
+		self.inspString = InspectModelFrame:CreateFontString("AvgItemLevelInspString", "OVERLAY", "GameFontNormalSmall")
+		self.inspString:SetPoint("TOPRIGHT", -5, 0)
 		self.inspString:SetJustifyH("RIGHT")
 		InspectPaperDollFrame:HookScript("OnShow", function(self) AvgItemLevel:CalculateAndShow("target") end)
 		inspectLoaded = true
@@ -46,32 +48,51 @@ function AvgItemLevel:ADDON_LOADED(event, addon)
 end
 
 function AvgItemLevel:PLAYER_LOGIN()
-	local butt = CreateFrame("Button", nil, CharacterModelFrame)
-	butt:SetFrameStrata("DIALOG")
-	butt:SetPoint("TOPRIGHT", -36, 0)
-	butt:SetWidth(65); butt:SetHeight(35)
+	local butt = CreateFrame("Button", nil, PaperDollFrame)
+	butt:SetNormalTexture("Interface\\Icons\\INV_Helmet_49")
+	-- butt:SetFrameStrata("DIALOG")
+	butt:SetPoint("BOTTOMRIGHT", -45, 84)
+	butt:SetWidth(22); butt:SetHeight(22)
 	self.ppdString = butt:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 	self.ppdString:SetAllPoints()
 	self.ppdString:SetJustifyH("RIGHT")
 
 	butt:SetScript("OnEnter", function(self)
 		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-		GameTooltip:SetText(L["Your current effective average iLevel.\nTo equip your highest iLevel set\nautomatically, Alt+Click here."])
+		GameTooltip:AddDoubleLine("|cffffffffAverage Equipped iLevel|r", string.format("|cffffffff%.2f|r", AvgItemLevel:CalculateAverage("player", allSlots)))
+		GameTooltip:AddLine(" ")
+
+		local vil = AvgItemLevel:CalculateAverage("player", vehicleSlots)
+		GameTooltip:AddDoubleLine("|cffffffffEffective Vehicle iLevel|r", string.format("|cffffffff%.2f|r", vil))
+		GameTooltip:AddDoubleLine("|cffffffffAppx Vehicle Health Bonus|r", string.format("|cffffffff%.2f%%|r", vil-170))
+		GameTooltip:AddLine(" ")
+
+		vil = AvgItemLevel:GetBestVehicleSetAvg() 
+		GameTooltip:AddDoubleLine("|cffffffffBest Available Vehicle Set|r", string.format("|cffffffff%.2f|r", vil))
+		GameTooltip:AddDoubleLine("|cffffffffAppx Vehicle Health Bonus|r", string.format("|cffffffff%.2f%%|r", vil-170))
+		GameTooltip:AddLine(" ")
+
+		GameTooltip:AddLine("|cffffff00Click|r to show the group report frame")
+		GameTooltip:AddLine("|cffffff00Shift-Click|r to equip best available vehicle set")
+		GameTooltip:Show()
 	end)
 	butt:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
 	butt:SetScript("OnClick", function(self, button)
-		if button == "LeftButton" and IsAltKeyDown() then
-			AvgItemLevel:EquipBest()
+		if button == "LeftButton" then
+			if IsShiftKeyDown() then 
+				AvgItemLevel:EquipBestVehicleSet()
+			else
+				SlashCmdList.AVGITEMLEVEL() -- hack
+			end 
 		end
 	end)
 
-	PaperDollFrame:HookScript("OnShow", function(self) AvgItemLevel:CalculateAndShow("player") end)
 	self:UnregisterEvent("PLAYER_LOGIN"); self.PLAYER_LOGIN = nil
 end
 
 function AvgItemLevel:UNIT_INVENTORY_CHANGED(event, unit)
-	if (unit == "player") or (unit == "target") then self:CalculateAndShow(unit) end
+	if (unit == "target") then self:CalculateAndShow(unit) end
 end
 
 function AvgItemLevel:UNIT_TARGET(event, unit)
@@ -88,39 +109,81 @@ function AvgItemLevel:GetAdjustedItemLevel(quality, iLevel)
 	return result
 end
 
-function AvgItemLevel:CalculateAverage(unit)
+function AvgItemLevel:CalculateAverage(unit, slots)
+	if not slots then slots = vehicleSlots end
 	local total = 0
-	local slot, link, quality, _, iLevel
-	for i = 1,#equipSlots do
+	local slot, link, quality, _, iLevel, equipSlot
+	local twoHanderEquipped = nil
+	local countedSlots = 0
+	for i = 1,#slots do
 		iLevel = 0
-		slot = GetInventorySlotInfo(equipSlots[i])
+		slot = GetInventorySlotInfo(slots[i])
 		link = GetInventoryItemLink(unit, slot)
 		if link then
-			_, _, quality, iLevel = GetItemInfo(link)
+			_, _, quality, iLevel, _, _, _, _, equipSlot = GetItemInfo(link)
+			if equipSlot == "INVTYPE_2HWEAPON" then twoHanderEquipped = true end
 			iLevel = self:GetAdjustedItemLevel(quality, iLevel)
 		end
-		total = total + iLevel
+		if not (twoHanderEquipped and slots[i] == "SECONDARYHANDSLOT") then
+			total = total + iLevel
+			countedSlots = countedSlots + 1
+		end
 	end
-	return total/#equipSlots
+	return total / countedSlots
 end
 
 function AvgItemLevel:CalculateAndShow(unit)
+	if unit ~= "target" then return end
 	local avg = self:CalculateAverage(unit)
-	local fs = (unit == "target") and self.inspString or self.ppdString
-	fs:SetText( string.format("Avg iLvl\n%.2f", avg) )
+	self.inspString:SetText( string.format("%.2f", avg) )
 end
 
+function AvgItemLevel:GetBestVehicleSetAvg()
+	local sum, count = 0, 0
+	local bestSet = self:GetBestVehicleSet()
+	local quality, iLevel, equipSlot, itemLink
+	for slotname, t in pairs(bestSet) do
+		itemLink = t[1]
+		if itemLink then
+			_, _, quality, iLevel, _, _, _, _, equipSlot = GetItemInfo(itemLink)
+			iLevel = self:GetAdjustedItemLevel(quality, iLevel)
+		end
+		sum = sum + iLevel
+		count = count + 1
+	end
+	return sum / count
+end
 
-function AvgItemLevel:EquipBest()
+function AvgItemLevel:EquipBestVehicleSet()
+	local bestSet = self:GetBestVehicleSet()
+	local itemLink, itemLoc, slotId, action
+	for slotname, t in pairs(bestSet) do
+		itemLink, itemLoc = t[1], t[2]
+		if itemLoc then
+			slotId = GetInventorySlotInfo(slotname)
+			action = EquipmentManager_EquipItemByLocation(itemLoc, slotId)
+			EquipmentManager_RunAction(action)
+			Debug("Equipping " .. itemLink)
+		else
+			Debug("Keeping " .. itemLink)
+		end
+	end
+end
+
+-- Returns a table of the best pieces for each slot
+-- Each entry in the result table is keyed by slotname and is a table with the following form
+-- { itemLink, itemLoc }
+-- where itemLoc is nil if the item is already equipped
+function AvgItemLevel:GetBestVehicleSet()
+	local resultSet = {}
 	local link, quality, iLevel, bag, slotName, slotId, locSlot
 	local maxItemLevel, maxItemLink, maxItemLoc
 	local currentlink, currentiLevel
 	local used = {}
-	local set = {}
 	local inventoryItemsForSlot, currentLink
 	local itemid, itemloc
 
-	for i,slotName in ipairs(equipSlots) do
+	for i,slotName in ipairs(vehicleSlots) do
 		maxItemLevel = 0
 		maxItemLink = ""
 
@@ -148,11 +211,12 @@ function AvgItemLevel:EquipBest()
 		end
 
 		if maxItemLevel > currentiLevel then
-			Debug("Equipping " .. _G[slotName] .. ": " .. maxItemLink .. " (" .. maxItemLevel .. ")")
-			local action = EquipmentManager_EquipItemByLocation(maxItemLoc, slotId)
-			EquipmentManager_RunAction(action)
+			resultSet[slotName] = { maxItemLink, maxItemLoc }
 		else
-			Debug("Keeping " .. _G[slotName] .. ": " .. currentlink .. " (" .. currentiLevel .. ")" )
+			resultSet[slotName] = { currentlink, nil }
 		end
 	end   
+
+	return resultSet
 end
+

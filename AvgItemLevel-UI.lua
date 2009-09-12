@@ -192,7 +192,7 @@ local equipButton = LibStub("tekKonfig-Button").new(panel, "RIGHT", reportButton
 equipButton:SetWidth(75) 
 equipButton:SetHeight(22)
 equipButton:SetText("Equip Best")
-equipButton:SetScript("OnClick", function() AvgItemLevel:EquipBest() end)
+equipButton:SetScript("OnClick", function() AvgItemLevel:EquipBestVehicleSet() end)
 
 scroll:SetValue(0)
 panel:SetScript("OnShow", Show)
