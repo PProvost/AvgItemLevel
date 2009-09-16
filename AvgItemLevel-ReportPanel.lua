@@ -23,7 +23,6 @@ panel:SetAttribute("UIPanelLayout-area", "middle")
 panel:SetAttribute("UIPanelLayout-pushable", 5)
 
 local averages
-
 local min, max
 local NUMROWS = 22
 local SCROLLSTEP = math.floor(NUMROWS/3)
@@ -186,23 +185,17 @@ scroll:SetScript("OnValueChanged", function(self, offset, ...)
 	return orig(self, offset, ...)
 end)
 
-local refreshButton = LibStub("tekKonfig-Button").new(panel, "TOPRIGHT", -45, -43)
-refreshButton:SetWidth(75) 
-refreshButton:SetHeight(22)
+local refreshButton = LibStub("tekKonfig-Button").new_small(panel, "TOPLEFT", panel, "TOP", 2, -38)
+refreshButton:SetWidth(65) 
+refreshButton:SetHeight(18)
 refreshButton:SetText("Refresh")
 refreshButton:SetScript("OnClick", Show)
 
-local reportButton = LibStub("tekKonfig-Button").new(panel, "RIGHT", refreshButton, "LEFT", -5, 0)
-reportButton:SetWidth(75) 
-reportButton:SetHeight(22)
-reportButton:SetText("Report")
+local reportButton = LibStub("tekKonfig-Button").new_small(panel, "TOPRIGHT", panel, "TOP", -2, -38)
+reportButton:SetWidth(65) 
+reportButton:SetHeight(18)
+reportButton:SetText("Print")
 reportButton:SetScript("OnClick", PrintReport)
-
-local equipButton = LibStub("tekKonfig-Button").new(panel, "RIGHT", reportButton, "LEFT", -5, 0)
-equipButton:SetWidth(75) 
-equipButton:SetHeight(22)
-equipButton:SetText("Equip Best")
-equipButton:SetScript("OnClick", function() AvgItemLevel:EquipBestVehicleSet() end)
 
 scroll:SetValue(0)
 panel:SetScript("OnShow", Show)
