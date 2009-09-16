@@ -240,6 +240,6 @@ SlashCmdList.AVGITEMLEVEL = function(msg)
 end
  
 dataobj.OnEnter = function(self) ShowTooltip(self, "player", "ANCHOR_BOTTOMLEFT") end
-dataobj.OnExit = function() GameTooltip:Hide() end
+dataobj.OnLeave = function() GameTooltip:Hide() end
 dataobj.OnClick = Player_OnClick
 
