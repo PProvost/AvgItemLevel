@@ -1,34 +1,39 @@
 h2. Overview
 
-AvgItemLevel is a World of Warcraft addon that lets you see the effective average ItemLevel (iLevel) of your currently equipped gear. On the bottom right of the Character and Inspect frames you can see the average for yourself or for your inspect target.
+AvgItemLevel is a World of Warcraft addon that lets you see the effective average Item Level (iLevel) of your currently equipped gear. On the bottom right of the Character and Inspect frames you can see the average for yourself or for your inspect target by placing the mouse over the helmet icon. A LibDataBroker launcher is also included that behaves the same as the character pane icon.
 
-If you are setting up raid assignments, however, that can get a bit tedious. To assist with that, you can use the /avgilevel command to bring up the party/raid report window. To report the averages to your group, simply click the "Report" button. A LibDataBroker launcher is also included that when clicked will open the report window.
+The tooltip displays the following information:
+* Average equipped iLevel for all equipped gear
+* Effective Vehicle iLevel (see below)
+* Approximate Vehicle Health bonus
+* Best Available Vehicle Set
+* Approximate Vehicle Health Bonus for Best Available set
 
-To automatically equip the highest iLevel piece for the relevant slots, Alt-Click the label on the character frame or click the "Equip Best" button on the report window.
+If you are setting up raid assignments, however, that can get a bit tedious. To assist with that, you can click on the helmet icon or use the /avgilevel command to bring up the party/raid report window. This window shows the Effective Vehicle iLevel for your raid or party. If you have a target selected it will also show your current target. To report the averages to your group, simply click the "Print" button at the top of the report frame. 
+
+To automatically equip the highest iLevel piece for the relevant slots, Shift-Click the label on the character frame or on the LDB launcher.
 
 No configuration required, just install and go.
 
-h2. How the value is calculated
+h2. How the Effective Vehicle iLevel is calculated
 
-The value is calculated using the current scaling for iLevel on vehicles like those used in Flame Leviathan and Wintergrasp. This calculation could change in the future.
-# 25-man scaling is same as in 10-man.
-# Shirt, tabard, offhand, and ranged/relic slots do not affect vehicle scaling
-# This does mean an ilvl 226 1 hand weapon is better than an ilvl 213 2 hander
-# Enchants and gems do not affect it either, it is based solely off item level
-# An ilvl 200 blue is equivalent to an ilvl 187 epic.
-# An empty slot is equivalent to an ilvl 0 epic. This does mean equipping an ilvl 0 blue such as Insignia of the Scourge will be worse than having nothing at all in the slot
+This value is calculated using the current scaling for iLevel on vehicles like those used in Flame Leviathan and Wintergrasp. This calculation could change in the future.
+* 25-man scaling is same as in 10-man
+* Shirt, tabard, offhand, and ranged/relic slots do not affect vehicle scaling and are ignored in the calculation
+* 13 levels are deducted for each reduction in quality. Therefore an iLevel 200 blue is equivalent to an iLevel 187 and an iLevel 200 green is treated as iLevel 174
+* An empty slot is treated as iLevel 0
 
 Additionally the following untested assumptions are made:
-# Artifact/heirloom (yellow) and legendary (orange) are the same as Epic (purple).
-# Common (white) and Poor (gray) are 0
+* Artifact/heirloom (yellow) and legendary (orange) are the same as Epic (purple).
+* Common (white) and Poor (gray) are 0
 
-h2. Impact of Averge ItemLevel on Vehicle Health
+h2. Impact of Averge Item Level on Vehicle Health
 
-# Taking the average ilvl of your gear using the above algorithm and subtracting 170 will give you the aproximate percent increase to the health of your vehicle.
-# Thus: All ilvl 200 epic gear => 200-170 => 30% increase in vehicle hp. All 226 would be a 56% increase.
+* Taking the average iLevel of your gear using the above algorithm and subtracting 170 will give you the aproximate percent increase to the health of your vehicle.
+* Thus: All iLevel 200 epic gear => 200-170 => 30% increase in vehicle hp. All 226 would be a 56% increase.
 
 h2. References
 
-# http://mmo-worlds.blogspot.com/2009/03/world-of-warcraft-how-flame-leviathan.html
+* http://mmo-worlds.blogspot.com/2009/03/world-of-warcraft-how-flame-leviathan.html
 
 
