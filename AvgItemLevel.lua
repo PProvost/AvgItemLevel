@@ -201,6 +201,8 @@ function AvgItemLevel:GetBestVehicleSet()
 
 		slotId = GetInventorySlotInfo(slotName)
 
+		-- TODO: For some people this returns nil. WHY? Maybe a class that can't actually use
+		-- something in that slot? Or having nothing at all in your bags? Must test.
 		inventoryItemsForSlot = GetInventoryItemsForSlot(slotId) 
 		for itemloc, itemid in pairs(inventoryItemsForSlot) do
 			_, link, quality, iLevel = GetItemInfo(itemid)
