@@ -1,5 +1,7 @@
 h2. Overview
 
+*NOTE:* This addon is no longer being maintained. The original purpose was to assist with creating groups for vehicle fights like Flame Leviathan, etc. It was never intended to be used for evaluating gear or group fitness. For that, I would recommend "ElitistGroup":http://www.wowace.com/addons/elitistgroup/ If raid vehicle fights make a comeback, this addon may be revived.
+
 AvgItemLevel is a World of Warcraft addon that lets you see the effective average Item Level (iLevel) of your currently equipped gear. On the bottom right of the Character and Inspect frames you can see the average for yourself or for your inspect target by placing the mouse over the helmet icon. A LibDataBroker launcher is also included that behaves the same as the character pane icon.
 
 The tooltip displays the following information:
